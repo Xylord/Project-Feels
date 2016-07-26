@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\BasicTile.cs" />
     <Compile Include="Assets\Scripts\LevelGrid.cs" />
+    <Compile Include="Assets\Scripts\MovementPlane.cs" />
     <Compile Include="Assets\Scripts\TileObject.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />

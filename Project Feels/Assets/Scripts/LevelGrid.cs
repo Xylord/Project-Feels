@@ -33,6 +33,8 @@ public class LevelGrid : MonoBehaviour {
                 grid[j * xSize + i].GetComponent<BasicTile>().YPosition = j;
                 grid[j * xSize + i].transform.parent = transform;
                 grid[j * xSize + i].name = "Tile " + i + " " + j;
+
+                grid[j * xSize + i].GetComponent<BasicTile>().InitializeTile();
             }
         }
         
@@ -54,6 +56,8 @@ public class LevelGrid : MonoBehaviour {
                 grid[j * xSize + i].GetComponent<BasicTile>().YPosition = j;
                 grid[j * xSize + i].transform.parent = transform;
                 grid[j * xSize + i].name = "Tile " + i + " " + j;
+
+                grid[j * xSize + i].GetComponent<BasicTile>().InitializeTile();
             }
         }
 
@@ -82,6 +86,8 @@ public class LevelGrid : MonoBehaviour {
             grid = null;
         }
     }
+
+
 
     public GameObject FindSpawn()
     {

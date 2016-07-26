@@ -6,6 +6,7 @@ public class BasicTile : MonoBehaviour {
 
     public enum Orientation
     {
+        Directionless,
         Forward,
         Backward,
         Right,
@@ -17,7 +18,6 @@ public class BasicTile : MonoBehaviour {
         Empty,
         Flat,
         Stair,
-        SteepStair,
         Impassable
     }
 
@@ -30,30 +30,53 @@ public class BasicTile : MonoBehaviour {
     public Orientation orientation;
     public float randomHeightVariationRange;
     public bool isSpawn;
+    public Mesh foundation, top;
 
-    private float height, randomHeightVariation;
-    private bool characterStepping;
+    private int presentHeight, nextHeight;
+    private float continuousHeight, heightVariationProgress, randomHeightVariation;
+    private bool isOccupied;
     private bool isUnderwater;
     
     
 
 	// Use this for initialization
 	void Start () {
-        grid = GameObject.Find("Grid").GetComponent<LevelGrid>();
-        height = baseHeight;
-        randomHeightVariation = Random.Range(-randomHeightVariationRange, randomHeightVariationRange);
+        
 	}
 
 	// Update is called once per frame
-	void Update () {
+	void Update ()
+    {
         //height = transform.localPosition.magnitude;
-        if(isSpawn == true)
+        if(isOccupied == true)
         {
             gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
         }
-        transform.localPosition = new Vector3(xPosition * grid.GridScale, height * grid.VerticalScale + randomHeightVariation, yPosition * grid.GridScale);
-
+        else
+        {
+            gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+        }
         
+        if (presentHeight != nextHeight)
+        {
+            continuousHeight = Mathf.Lerp(presentHeight, nextHeight, heightVariationProgress);
+            heightVariationProgress += Time.deltaTime;
+            if (heightVariationProgress >= 1f)
+            {
+                heightVariationProgress = 0f;
+                presentHeight = nextHeight;
+            }
+        }
+        
+        transform.localPosition = new Vector3(xPosition * grid.GridScale, continuousHeight * grid.VerticalScale + randomHeightVariation, yPosition * grid.GridScale);
+    }
+
+    public void InitializeTile()
+    {
+        grid = GameObject.Find("Grid").GetComponent<LevelGrid>();
+        presentHeight = baseHeight;
+        heightVariationProgress = 0f;
+        randomHeightVariation = Random.Range(-randomHeightVariationRange, randomHeightVariationRange);
     }
 
     public int XPosition
@@ -89,6 +112,18 @@ public class BasicTile : MonoBehaviour {
         set
         {
             isSpawn = value;
+        }
+    }
+
+    public bool IsOccupied
+    {
+        get
+        {
+            return isOccupied;
+        }
+        set
+        {
+            isOccupied = value;
         }
     }
 }
