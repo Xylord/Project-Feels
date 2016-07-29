@@ -10,6 +10,9 @@ public class LevelGrid : MonoBehaviour {
     public float gridScale, verticalScale;
     public int minHeight, maxHeight, xSize, ySize;
 
+    public Mesh foundation, stair;
+    public Material[] tileMaterials;
+
 	// Use this for initialization
 	void Start () {
         //GenerateEmptyGrid();
@@ -20,8 +23,6 @@ public class LevelGrid : MonoBehaviour {
     public void GenerateEmptyGrid()
     {
         ClearGrid();
-
-        print("pls");
 
         grid = new GameObject[xSize * ySize];
         for (int i = 0; i <= xSize - 1; i++)
@@ -43,8 +44,6 @@ public class LevelGrid : MonoBehaviour {
     public void GenerateEmptyGridEditor()
     {
         ClearGridEditor();
-        
-        print("pls");
 
         grid = new GameObject[xSize * ySize];
         for (int i = 0; i <= xSize - 1; i++)
@@ -87,7 +86,16 @@ public class LevelGrid : MonoBehaviour {
         }
     }
 
-
+    public void UpdateGrid()
+    {
+        if (grid != null)
+        {
+            for (int i = 0; i <= grid.Length - 1; i++)
+            {
+                grid[i].GetComponent<BasicTile>().InitializeTile();
+            }
+        }
+    }
 
     public GameObject FindSpawn()
     {

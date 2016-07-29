@@ -38,6 +38,13 @@ public class GridInspector : Editor
             grid.ClearGridEditor();
             EditorUtility.SetDirty(grid);
         }
+
+        if (GUILayout.Button("Update Grid"))
+        {
+            Undo.RecordObject(grid, "Update Grid");
+            grid.UpdateGrid();
+            EditorUtility.SetDirty(grid);
+        }
     }
 
 }
