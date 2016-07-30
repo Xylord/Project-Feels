@@ -251,169 +251,9 @@ public class TileObject : MonoBehaviour {
 
     void FindMoves(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft)
     {
-        //bool N = true, NE = true, E = true, SE = true, S = true, SW = true, W = true, NW = true;
         bool[] knownTiles = { true, true, true, true, true, true, true, true };
         bool[] reachedEndOfLine = { false, false, false, false, false, false, false, false };
         int endedLines = 0;
-        //int repeatedTiles = 0, 
-        int movesFoundThisRound = 0;
-        parsedMoves++;
-
-        int[] straightMoves = new int[8];
-
-        
-
-        MovementPlane.Movement[] directions = new MovementPlane.Movement[8];
-        directions[0].xMovement = 1;
-        directions[0].yMovement = 0;
-
-        directions[4].xMovement = 1;
-        directions[4].yMovement = 1;
-
-        directions[1].xMovement = 0;
-        directions[1].yMovement = 1;
-
-        directions[5].xMovement = -1;
-        directions[5].yMovement = 1;
-
-        directions[2].xMovement = -1;
-        directions[2].yMovement = 0;
-
-        directions[6].xMovement = -1;
-        directions[6].yMovement = -1;
-
-        directions[3].xMovement = 0;
-        directions[3].yMovement = -1;
-
-        directions[7].xMovement = 1;
-        directions[7].yMovement = -1;
-
-        for (int i = 0; i < straightMoves.Length; i++)
-        {
-            straightMoves[i] = 1;
-        }
-
-        int initXPos = presentTile.GetComponent<BasicTile>().XPosition,
-            initYPos = presentTile.GetComponent<BasicTile>().YPosition;
-
-        while(endedLines < 8)
-        {
-            for (int j = 0; j <= 7; j++)
-            {
-                if (!reachedEndOfLine[j])
-                {
-
-                    for (int i = 0; i < movesFound; i++)
-                    {
-                        int X = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
-                            Y = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition,
-                            newXPos = xPos, newYPos = yPos;
-
-                        newXPos += straightMoves[j] * directions[j].xMovement;
-                        newYPos += straightMoves[j] * directions[j].yMovement;
-                        
-
-                        if ((newXPos == initXPos && newYPos == initYPos) ||
-                            (newXPos == X && newYPos == Y))
-                        {
-                            knownTiles[j] = false;
-                        }
-                    }
-
-                    if (knownTiles[j])
-                    {
-                        MovementPlane.Movement[] newRoute = new MovementPlane.Movement[route.Length + straightMoves[j]];
-                        int newXPos = xPos, newYPos = yPos;
-                        for (int k = 0; k < route.Length; k++)
-                        {
-                            newRoute[k] = route[k];
-                        }
-
-                        for (int k = 0; k < straightMoves[j]; k++)
-                        {
-                            newRoute[route.Length + k] = directions[j];
-                        }
-
-                        newXPos += straightMoves[j] * directions[j].xMovement;
-                        newYPos += straightMoves[j] * directions[j].yMovement;
-
-                        if (SetupMovement(directions[j], newRoute, movesFound, newXPos, newYPos, movementPointsLeft))
-                        {
-                            straightMoves[j]++;
-                            movesFound++;
-                            movesFoundThisRound++;
-                        }
-
-                        else
-                        {
-                            reachedEndOfLine[j] = true;
-                            endedLines++;
-                        }
-                    }
-
-                    else
-                    {
-                        reachedEndOfLine[j] = true;
-                        endedLines++;
-                    }
-                }
-            }
-        }
-
-        /*for (int i = 0; i < movesFound; i++)
-        {
-            int X = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
-                Y = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition;
-
-            for (int j = 0; j <= 7; j++)
-            {
-                if ((xPos + directions[j].xMovement == initXPos && yPos + directions[j].yMovement == initYPos) ||
-                    (xPos + directions[j].xMovement == X && yPos + directions[j].yMovement == Y))
-                {
-                    knownTiles[j] = false;
-                }
-            }
-        }
-
-        //Going all the ways
-
-
-        for (int i = 0; i <= 7; i++)
-        {
-            if (knownTiles[i])
-            {
-                if (SetupMovement(directions[i], route, movesFound, xPos, yPos, movementPointsLeft))
-                {
-                    movesFound++;
-                    movesFoundThisRound++;
-                }
-            }
-        }*/
-
-                /*if (movesFoundThisRound == 0)
-                {
-                    yield break;
-                }*/
-
-        if (possibleMoves[parsedMoves - 1] != null)
-        { 
-            int X = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
-                Y = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition,
-                movePointsLeft = maxMovementPoints - possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().movementCost;
-            MovementPlane.Movement[] moveRoute = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().route;
-
-            FindMoves(X, Y, moveRoute, movesFound, movePointsLeft);
-        }
-        return;
-    }
-
-    IEnumerator NewFindMovesCorout(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft)
-    {
-        //bool N = true, NE = true, E = true, SE = true, S = true, SW = true, W = true, NW = true;
-        bool[] knownTiles = { true, true, true, true, true, true, true, true };
-        bool[] reachedEndOfLine = { false, false, false, false, false, false, false, false };
-        int endedLines = 0;
-        //int repeatedTiles = 0, 
         int movesFoundThisRound = 0;
         parsedMoves++;
 
@@ -498,7 +338,7 @@ public class TileObject : MonoBehaviour {
 
                         if (SetupMovement(directions[j], newRoute, movesFound, newXPos, newYPos, movementPointsLeft))
                         {
-                            yield return new WaitForSeconds(0.1f);
+                            //yield return new WaitForSeconds(0.1f);
                             straightMoves[j]++;
                             movesFound++;
                             movesFoundThisRound++;
@@ -520,7 +360,132 @@ public class TileObject : MonoBehaviour {
             }
         }
 
-        
+
+
+        if (possibleMoves[parsedMoves - 1] != null)
+        {
+            int X = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
+                Y = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition,
+                movePointsLeft = maxMovementPoints - possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().movementCost;
+            MovementPlane.Movement[] moveRoute = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().route;
+
+            FindMoves(X, Y, moveRoute, movesFound, movePointsLeft);
+        }
+        return;
+    }
+
+    IEnumerator NewFindMovesCorout(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft)
+    {
+        //bool N = true, NE = true, E = true, SE = true, S = true, SW = true, W = true, NW = true;
+        bool[] knownTiles = { true, true, true, true, true, true, true, true };
+        bool[] reachedEndOfLine = { false, false, false, false, false, false, false, false };
+        int endedLines = 0;
+        //int repeatedTiles = 0, 
+        int movesFoundThisRound = 0;
+        parsedMoves++;
+
+        int[] straightMoves = new int[8];
+
+
+
+        MovementPlane.Movement[] directions = new MovementPlane.Movement[8];
+        directions[4].xMovement = 1;
+        directions[4].yMovement = 0;
+
+        directions[0].xMovement = 1;
+        directions[0].yMovement = 1;
+
+        directions[5].xMovement = 0;
+        directions[5].yMovement = 1;
+
+        directions[1].xMovement = -1;
+        directions[1].yMovement = 1;
+
+        directions[6].xMovement = -1;
+        directions[6].yMovement = 0;
+
+        directions[2].xMovement = -1;
+        directions[2].yMovement = -1;
+
+        directions[7].xMovement = 0;
+        directions[7].yMovement = -1;
+
+        directions[3].xMovement = 1;
+        directions[3].yMovement = -1;
+
+        for (int i = 0; i < straightMoves.Length; i++)
+        {
+            straightMoves[i] = 1;
+        }
+
+        int initXPos = presentTile.GetComponent<BasicTile>().XPosition,
+            initYPos = presentTile.GetComponent<BasicTile>().YPosition;
+
+        while (endedLines < 8)
+        {
+            for (int j = 0; j <= 7; j++)
+            {
+                if (!reachedEndOfLine[j])
+                {
+
+                    for (int i = 0; i < movesFound; i++)
+                    {
+                        int X = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
+                            Y = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition,
+                            newXPos = xPos, newYPos = yPos;
+
+                        newXPos += straightMoves[j] * directions[j].xMovement;
+                        newYPos += straightMoves[j] * directions[j].yMovement;
+
+
+                        if ((newXPos == initXPos && newYPos == initYPos) ||
+                            (newXPos == X && newYPos == Y))
+                        {
+                            knownTiles[j] = false;
+                        }
+                    }
+
+                    if (knownTiles[j])
+                    {
+                        MovementPlane.Movement[] newRoute = new MovementPlane.Movement[route.Length + straightMoves[j] - 1];
+                        int newXPos = xPos, newYPos = yPos;
+
+                        for (int k = 0; k < route.Length; k++)
+                        {
+                            newRoute[k] = route[k];
+                        }
+
+                        for (int k = 0; k < straightMoves[j] - 1; k++)
+                        {
+                            newRoute[route.Length + k] = directions[j];
+                        }
+
+                        newXPos += (straightMoves[j] - 1) * directions[j].xMovement;
+                        newYPos += (straightMoves[j] - 1) * directions[j].yMovement;
+
+                        if (SetupMovement(directions[j], newRoute, movesFound, newXPos, newYPos, movementPointsLeft))
+                        {
+                            yield return new WaitForSeconds(0.2f);
+                            straightMoves[j]++;
+                            movesFound++;
+                            movesFoundThisRound++;
+                        }
+
+                        else
+                        {
+                            reachedEndOfLine[j] = true;
+                            endedLines++;
+                        }
+                    }
+
+                    else
+                    {
+                        reachedEndOfLine[j] = true;
+                        endedLines++;
+                    }
+                }
+            }
+        }
 
         if (possibleMoves[parsedMoves - 1] != null)
         {
@@ -533,8 +498,9 @@ public class TileObject : MonoBehaviour {
         }
         yield break;
     }
+    
 
-    IEnumerator FindMovesCorout(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft)
+    /*IEnumerator FindMovesCorout(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft)
     {
         //bool N = true, NE = true, E = true, SE = true, S = true, SW = true, W = true, NW = true;
         bool[] knownTiles = { true, true, true, true, true, true, true, true };
@@ -602,11 +568,6 @@ public class TileObject : MonoBehaviour {
             }
         }
 
-        /*if (movesFoundThisRound == 0)
-        {
-            yield break;
-        }*/
-
         if (possibleMoves[parsedMoves - 1] != null)
         {
             int X = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
@@ -617,6 +578,13 @@ public class TileObject : MonoBehaviour {
             StartCoroutine(FindMovesCorout(X, Y, moveRoute, movesFound, movePointsLeft));
         }
         yield break;
+    }*/
+
+    bool DiagonalsCrossing(MovementPlane.Movement move1, MovementPlane.Movement move2)
+    {
+        bool crossing = false;
+
+        return crossing
     }
 
     bool SetupMovement(MovementPlane.Movement move, MovementPlane.Movement[] route, 
@@ -624,19 +592,62 @@ public class TileObject : MonoBehaviour {
     {
         int moveCost = 0;
         bool foundMove = false;
+        bool crossingDiagonal = false;
+
+        if(move.xMovement != 0 && move.yMovement != 0)
+        {
+            int crossingTiles = 0;
+
+            for (int i = 0; i < movesFound; i++)
+            {
+                int X = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
+                    Y = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition;
+
+                if ((xPos + move.xMovement == X && yPos == Y) ||
+                    (xPos == X && yPos + move.yMovement == Y))
+                {
+                    crossingTiles++;
+                }
+            }
+
+            if (crossingTiles >= 2)
+                crossingDiagonal = true;
+        }
+
+
+
         if (!(xPos + move.xMovement < grid.xSize && xPos + move.xMovement >= 0
             &&
             yPos + move.yMovement < grid.ySize && yPos + move.yMovement >= 0))
+            return foundMove;
+
+        else if (crossingDiagonal)
             return foundMove;
 
         else if (grid.Grid(xPos + move.xMovement, yPos + move.yMovement).GetComponent<BasicTile>().Accessible(grid.Grid(xPos, yPos).GetComponent<BasicTile>()))
         {
             foundMove = true;
 
+
+
             for (int i = 0; i < route.Length; i++)
             {
                 if (route[i].xMovement != 0 && route[i].yMovement != 0)
-                    moveCost += 3;
+                {
+                    /*if (i >= 1)
+                    {
+                        print("stuff");
+                        if ((route[i - 1].xMovement != 0 && route[i - 1].yMovement != 0) && (route[i].xMovement != route[i - 1].xMovement && route[i].yMovement != route[i - 1].yMovement))
+                        {
+                            print("stuff");
+                            moveCost += 1;
+                        }
+                        else
+                            moveCost += 3;
+                    }
+                    else*/
+                        moveCost += 3;
+                }
 
                 else
                     moveCost += 2;
