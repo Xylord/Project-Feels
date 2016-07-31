@@ -30,6 +30,7 @@ public class BasicTile : MonoBehaviour {
     public Orientation orientation;
     public float randomHeightVariationRange;
     public bool isSpawn;
+	public string[] spawnTags;
 
     //private int nextHeight;
     private float continuousHeight, heightVariationProgress, randomHeightVariation;
@@ -93,6 +94,11 @@ public class BasicTile : MonoBehaviour {
 
         randomHeightVariation = Random.Range(-randomHeightVariationRange, randomHeightVariationRange);
         
+		if (isSpawn) 
+		{
+			grid.spawnTiles.Add (this);
+		}
+			
 
         if (Application.isEditor)
         {

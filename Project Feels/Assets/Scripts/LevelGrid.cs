@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [ExecuteInEditMode]
 public class LevelGrid : MonoBehaviour {
@@ -12,6 +13,7 @@ public class LevelGrid : MonoBehaviour {
 
     public Mesh foundation, stair;
     public Material[] tileMaterials;
+	public List<BasicTile> spawnTiles = new List<BasicTile>();
 
 	// Use this for initialization
 	void Start () {
@@ -88,6 +90,8 @@ public class LevelGrid : MonoBehaviour {
 
     public void UpdateGrid()
     {
+		spawnTiles.Clear ();
+
         if (grid != null)
         {
             for (int i = 0; i <= grid.Length - 1; i++)
