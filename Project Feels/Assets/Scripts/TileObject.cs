@@ -10,9 +10,14 @@ public class TileObject : MonoBehaviour {
     public float offsetFromTile, speed;
     public GameObject[] possibleMoves;
     public int maxMovementPoints;
+    public AITurnManager turnManager;
+    public int team;
 
+    [HideInInspector]
+    public bool isMoving;
 
-    private int parsedMoves, routesFound;
+    [HideInInspector]
+    public int parsedMoves, routesFound;
 
 	// Use this for initialization
 	void Start () {
@@ -47,15 +52,21 @@ public class TileObject : MonoBehaviour {
         {
             presentTile = possibleSpawns[Random.Range(0, possibleSpawns.Count - 1)];
             presentTile.GetComponent<BasicTile>().IsOccupied = true;
+            presentTile.GetComponent<BasicTile>().CharacterStepping = this;
             nextTile = null;
         }
+
+        turnManager = GameObject.Find("AITurnManager").GetComponent<AITurnManager>();
+        isMoving = false;
+
     }
 	
 	// Update is called once per frame
 	void Update () {
-        Selecting();
-
-        NotMovingUpdate();
+        if (!isMoving)
+        {
+            NotMovingUpdate();
+        }
 		/*
         else
         {
@@ -98,63 +109,6 @@ public class TileObject : MonoBehaviour {
             }
             return;
         }*/
-
-        if (Input.GetKeyDown(KeyCode.M))
-        {
-            print("Showing moves");
-            ShowMoves();
-        }
-
-        if (Input.GetKeyDown(KeyCode.I))
-        {
-            print("Trying");
-            TestPath(1, 0);
-        }
-
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            print("Trying");
-            TestPath(-1, 0);
-        }
-
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            print("Trying");
-            TestPath(0, 1);
-        }
-
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            print("Trying");
-            TestPath(0, -1);
-        }
-
-        if (Input.GetKeyDown(KeyCode.U))
-        {
-            print("Trying");
-            TestPath(1, 1);
-        }
-
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            MoveForward();
-        }
-
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            MoveBackward();
-        }
-
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            MoveRight();
-        }
-
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            MoveLeft();
-        }
-
     }
 
     public void NotMovingUpdate()
@@ -174,29 +128,47 @@ public class TileObject : MonoBehaviour {
         }
     }
 
-    public void Selecting()
+    static public MovementPlane.Movement[] TruncateRoute(MovementPlane.Movement[] truncatedRoute, int newMovementCost, bool removeLastMove)
     {
-        RaycastHit hitInfo = new RaycastHit();
-        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo);
-
-        if (Input.GetKey(KeyCode.Mouse0))
+        List<MovementPlane.Movement> newRoute = new List<MovementPlane.Movement>();
+        MovementPlane.Movement[] finalNewRoute = null;
+        int moveCost = 0;
+        for (int i = 0; i < truncatedRoute.Length; i++)
         {
-            if(hit)
+            if (truncatedRoute[i].xMovement != 0 && truncatedRoute[i].yMovement != 0)
+                moveCost += 3;
+
+            else
+                moveCost += 2;
+
+            if (moveCost <= newMovementCost)
+                newRoute.Add(truncatedRoute[i]);
+
+            else
             {
-                GameObject move = hitInfo.transform.gameObject;
-                StartCoroutine(FollowRoute(move.GetComponent<MovementPlane>().route));
-                ClearMoves();
-                return;
+                break;
             }
         }
+
+        if (removeLastMove)
+        {
+            finalNewRoute = new MovementPlane.Movement[newRoute.Count - 1];
+            for (int j = 0; j < finalNewRoute.Length; j++)
+            {
+                finalNewRoute[j] = newRoute[j];
+            }
+        }
+        else
+        {
+            
+            finalNewRoute = new MovementPlane.Movement[newRoute.Count];
+            finalNewRoute = newRoute.ToArray();
+        }
+
+            return finalNewRoute;
     }
 
-    void FollowPath(MovementPlane.Movement[] route)
-    {
-
-    }
-
-    IEnumerator FollowRoute(MovementPlane.Movement[] route)
+    public IEnumerator FollowRoute(MovementPlane.Movement[] route)
     {
         for(int i = 0; i < route.Length; i++)
         {
@@ -217,13 +189,21 @@ public class TileObject : MonoBehaviour {
             }
 
             presentTile.GetComponent<BasicTile>().IsOccupied = false;
+            presentTile.GetComponent<BasicTile>().CharacterStepping = null;
             presentTile = nextTile;
             presentTile.GetComponent<BasicTile>().IsOccupied = true;
+            presentTile.GetComponent<BasicTile>().CharacterStepping = this;
             nextTile = null;
             moveProgress = 0f;
         }
-
+        isMoving = false;
+        FinishedMoving();
         yield break;
+    }
+
+    public virtual void FinishedMoving()
+    {
+
     }
 
     Vector3 CalculateMovement(float moveProgress)
@@ -255,27 +235,7 @@ public class TileObject : MonoBehaviour {
         return Vector3.Lerp(oldPosition, newPosition, moveProgress) + new Vector3(0f, offsetFromTile, 0f);
     }
 
-    public void ShowMoves()
-    {
-        ClearMoves();
-
-        int xPos = presentTile.GetComponent<BasicTile>().XPosition,
-            yPos = presentTile.GetComponent<BasicTile>().YPosition;
-
-        MovementPlane.Movement[] startRoute = new MovementPlane.Movement[0];
-
-        possibleMoves = new GameObject[grid.xSize * grid.ySize];
-
-        routesFound = 0;
-        parsedMoves = 0;
-
-        FindMoves(xPos, yPos, startRoute, routesFound, maxMovementPoints);
-        //StartCoroutine(NewFindMovesCorout(xPos, yPos, startRoute, routesFound, maxMovementPoints));
-        
-        
-    }
-
-    void FindMoves(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft)
+    public void FindMoves(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft, int maxMoves, bool unitsBlock)
     {
         bool[] knownTiles = { true, true, true, true, true, true, true, true };
         bool[] reachedEndOfLine = { false, false, false, false, false, false, false, false };
@@ -360,7 +320,7 @@ public class TileObject : MonoBehaviour {
                         newXPos += (straightMoves[j] - 1) * directions[j].xMovement;
                         newYPos += (straightMoves[j] - 1) * directions[j].yMovement;
 
-                        if (SetupMovement(directions[j], newRoute, movesFound, newXPos, newYPos, movementPointsLeft))
+                        if (SetupMovement(directions[j], newRoute, movesFound, newXPos, newYPos, movementPointsLeft, maxMoves, unitsBlock))
                         {
                             //yield return new WaitForSeconds(0.1f);
                             straightMoves[j]++;
@@ -384,21 +344,19 @@ public class TileObject : MonoBehaviour {
             }
         }
 
-
-
         if (possibleMoves[parsedMoves - 1] != null)
         {
             int X = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
                 Y = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition,
-                movePointsLeft = maxMovementPoints - possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().movementCost;
+                movePointsLeft = maxMoves - possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().movementCost;
             MovementPlane.Movement[] moveRoute = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().route;
 
-            FindMoves(X, Y, moveRoute, movesFound, movePointsLeft);
+            FindMoves(X, Y, moveRoute, movesFound, movePointsLeft, maxMoves, unitsBlock);
         }
         return;
     }
 
-    IEnumerator NewFindMovesCorout(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft)
+    /*IEnumerator NewFindMovesCorout(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft, int maxMoves, bool unitsBlock)
     {
         bool[] knownTiles = { true, true, true, true, true, true, true, true };
         bool[] reachedEndOfLine = { false, false, false, false, false, false, false, false };
@@ -483,7 +441,7 @@ public class TileObject : MonoBehaviour {
                         newXPos += (straightMoves[j] - 1) * directions[j].xMovement;
                         newYPos += (straightMoves[j] - 1) * directions[j].yMovement;
 
-                        if (SetupMovement(directions[j], newRoute, movesFound, newXPos, newYPos, movementPointsLeft))
+                        if (SetupMovement(directions[j], newRoute, movesFound, newXPos, newYPos, movementPointsLeft, maxMoves, unitsBlock))
                         {
                             yield return new WaitForSeconds(0.2f);
                             straightMoves[j]++;
@@ -514,11 +472,11 @@ public class TileObject : MonoBehaviour {
                 movePointsLeft = maxMovementPoints - possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().movementCost;
             MovementPlane.Movement[] moveRoute = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().route;
 
-            StartCoroutine(NewFindMovesCorout(X, Y, moveRoute, movesFound, movePointsLeft));
+            StartCoroutine(NewFindMovesCorout(X, Y, moveRoute, movesFound, movePointsLeft, maxMoves, unitsBlock));
         }
         yield break;
     }
-
+    */
     bool DiagonalsCrossing(MovementPlane.Movement move1, MovementPlane.Movement move2)
     {
         bool crossing = false;
@@ -535,7 +493,7 @@ public class TileObject : MonoBehaviour {
     }
 
     bool SetupMovement(MovementPlane.Movement move, MovementPlane.Movement[] route, 
-        int movesFound, int xPos, int yPos, int movePointsLeft)
+        int movesFound, int xPos, int yPos, int movePointsLeft, int maxMoves, bool unitsBlock)
     {
         int moveCost = 0;
         bool foundMove = false;
@@ -566,7 +524,7 @@ public class TileObject : MonoBehaviour {
         else if (crossingDiagonal)
             return foundMove;
 
-        else if (grid.Grid(xPos + move.xMovement, yPos + move.yMovement).GetComponent<BasicTile>().Accessible(grid.Grid(xPos, yPos).GetComponent<BasicTile>()))
+        else if (grid.Grid(xPos + move.xMovement, yPos + move.yMovement).GetComponent<BasicTile>().Accessible(grid.Grid(xPos, yPos).GetComponent<BasicTile>(), unitsBlock))
         {
             foundMove = true;
 
@@ -574,18 +532,6 @@ public class TileObject : MonoBehaviour {
             {
                 if (route[i].xMovement != 0 && route[i].yMovement != 0)
                 {
-                    /*if (i >= 1)
-                    {
-                        print("stuff");
-                        if ((route[i - 1].xMovement != 0 && route[i - 1].yMovement != 0) && (route[i].xMovement != route[i - 1].xMovement && route[i].yMovement != route[i - 1].yMovement))
-                        {
-                            print("stuff");
-                            moveCost += 1;
-                        }
-                        else
-                            moveCost += 3;
-                    }
-                    else*/
                         moveCost += 3;
                 }
 
@@ -597,7 +543,7 @@ public class TileObject : MonoBehaviour {
                 moveCost += 3;
             else
                 moveCost += 2;
-            if (moveCost <= maxMovementPoints)
+            if (moveCost <= maxMoves)
             {
                 possibleMoves[movesFound] = Instantiate(movementPlane);
                 possibleMoves[movesFound].GetComponent<MovementPlane>().presentTile = grid.Grid(xPos + move.xMovement, yPos + move.yMovement);
@@ -631,7 +577,7 @@ public class TileObject : MonoBehaviour {
             Y = presentTile.GetComponent<BasicTile>().YPosition;
         BasicTile targetTile = grid.Grid(X + varX, Y + varY).GetComponent<BasicTile>();
 
-        if (targetTile.GetComponent<BasicTile>().Accessible(presentTile.GetComponent<BasicTile>()))
+        if (targetTile.GetComponent<BasicTile>().Accessible(presentTile.GetComponent<BasicTile>(), true))
         {
             print("CAAAAN DOO");
         }
@@ -641,7 +587,7 @@ public class TileObject : MonoBehaviour {
 
     }
 
-    void ClearMoves()
+    public void ClearMoves()
     {
         if (possibleMoves != null)
         {
@@ -653,7 +599,21 @@ public class TileObject : MonoBehaviour {
         }
     }
 
-    void MoveForward()
+    public bool IsMoving
+    {
+        get
+        {
+            return isMoving;
+        }
+        set
+        {
+            isMoving = value;
+        }
+    }
+
+    
+
+    /*void MoveForward()
     {
         int X = presentTile.GetComponent<BasicTile>().XPosition, 
             Y = presentTile.GetComponent<BasicTile>().YPosition;
@@ -711,5 +671,5 @@ public class TileObject : MonoBehaviour {
             return;
         }
         nextTile = grid.Grid(X, Y + 1);
-    }
+    }*/
 }

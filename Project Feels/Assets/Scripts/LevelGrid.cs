@@ -7,6 +7,7 @@ public class LevelGrid : MonoBehaviour {
     [SerializeField]
     private GameObject[] grid;
 
+    public AITurnManager turnManager;
     public GameObject emptyTile;
     public float gridScale, verticalScale;
     public int minHeight, maxHeight, xSize, ySize;
@@ -90,7 +91,8 @@ public class LevelGrid : MonoBehaviour {
 
     public void UpdateGrid()
     {
-		spawnTiles.Clear ();
+        turnManager = GameObject.Find("AITurnManager").GetComponent<AITurnManager>();
+        spawnTiles.Clear ();
 
         if (grid != null)
         {

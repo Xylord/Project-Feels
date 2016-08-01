@@ -34,8 +34,9 @@ public class BasicTile : MonoBehaviour {
 
     //private int nextHeight;
     private float continuousHeight, heightVariationProgress, randomHeightVariation;
-    private bool isOccupied;
+    public bool isOccupied;
     private bool isUnderwater;
+    public TileObject characterStepping;
     public GameObject foundation, top;
     
     
@@ -91,6 +92,8 @@ public class BasicTile : MonoBehaviour {
         grid = GameObject.Find("Grid").GetComponent<LevelGrid>();
         heightVariationProgress = 0f;
         continuousHeight = presentHeight;
+        characterStepping = null;
+        isOccupied = false;
 
         randomHeightVariation = Random.Range(-randomHeightVariationRange, randomHeightVariationRange);
         
@@ -176,9 +179,9 @@ public class BasicTile : MonoBehaviour {
         }
     }
 
-    public bool Accessible(BasicTile originTile)
+    public bool Accessible(BasicTile originTile, bool unitsBlock)
     {
-        bool availability = true, diagonal = false, aroundCorner = false, 
+        bool diagonal = false, aroundCorner = false, 
             sameHeight = originTile.PresentHeight == presentHeight;
 
         Orientation moveDirection = Orientation.Directionless;
@@ -207,8 +210,13 @@ public class BasicTile : MonoBehaviour {
             return false;
         }
 
-        else if (!(originTile.PresentHeight == presentHeight + 1 
-            || originTile.PresentHeight == presentHeight 
+        else if (isOccupied && unitsBlock)
+        {
+            return false;
+        }
+
+        else if (!(originTile.PresentHeight == presentHeight + 1
+            || originTile.PresentHeight == presentHeight
             || originTile.PresentHeight == presentHeight - 1))
         {
             return false;
@@ -238,22 +246,31 @@ public class BasicTile : MonoBehaviour {
 
         else if (originTile.type == TileKind.Stair)
         {
-            if (!(originTile.orientation == moveDirection || InvertOrientation(originTile.orientation) == moveDirection))
+            if (moveDirection != InvertOrientation(originTile.orientation) && moveDirection != originTile.orientation && originTile.orientation == orientation)
+            {
+                print("Move thing");
+                if (type == TileKind.Stair
+                    && sameHeight)
+                {
+                    return true;
+                }
+            }
+            /*if (!(originTile.orientation == moveDirection || InvertOrientation(originTile.orientation) == moveDirection))
             {
                 return false;
-            }
+            }*/
             else if (originTile.orientation == moveDirection)
             {
                 if (type == TileKind.Flat && sameHeight)
                 {
                     return true;
                 }
-                else if (type == TileKind.Stair 
+                else if (type == TileKind.Stair
                     && orientation == moveDirection && originTile.PresentHeight == presentHeight - 1)
                 {
                     return true;
                 }
-                else if (type == TileKind.Stair 
+                else if (type == TileKind.Stair
                     && InvertOrientation(orientation) == moveDirection && sameHeight)
                 {
                     return true;
@@ -266,17 +283,17 @@ public class BasicTile : MonoBehaviour {
 
             else if (InvertOrientation(originTile.orientation) == moveDirection)
             {
-                if (type == TileKind.Flat 
+                if (type == TileKind.Flat
                     && originTile.PresentHeight == presentHeight + 1)
                 {
                     return true;
                 }
-                else if (type == TileKind.Stair && orientation == InvertOrientation(moveDirection) 
+                else if (type == TileKind.Stair && orientation == InvertOrientation(moveDirection)
                     && originTile.PresentHeight == presentHeight + 1)
                 {
                     return true;
                 }
-                else if (type == TileKind.Stair 
+                else if (type == TileKind.Stair
                     && orientation == moveDirection && sameHeight)
                 {
                     return true;
@@ -284,6 +301,16 @@ public class BasicTile : MonoBehaviour {
                 else
                 {
                     return false;
+                }
+            }
+
+            else if (moveDirection != InvertOrientation(originTile.orientation) && moveDirection != originTile.orientation)
+            {
+                print("Move thing");
+                if (type == TileKind.Stair
+                    && sameHeight)
+                {
+                    return true;
                 }
             }
 
@@ -414,4 +441,17 @@ public class BasicTile : MonoBehaviour {
             isOccupied = value;
         }
     }
+
+    public TileObject CharacterStepping
+    {
+        get
+        {
+            return characterStepping;
+        }
+        set
+        {
+            characterStepping = value;
+        }
+    }
+    
 }
