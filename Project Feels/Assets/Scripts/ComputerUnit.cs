@@ -21,7 +21,6 @@ public class ComputerUnit : TileObject {
 	// Use this for initialization
 	void Start () {
         InitializeTileObject();
-        turnManager.spawnedAIs.Add(this);
     }
 	
 	// Update is called once per frame
@@ -29,12 +28,11 @@ public class ComputerUnit : TileObject {
         if (!isMoving)
         {
             NotMovingUpdate();
-            
-        }
 
-        if (isTurn && !isMoving)
-        {
-            StateManager();
+            if (isTurn)
+            {
+                StateManager();
+            }
         }
 
     }
@@ -59,12 +57,11 @@ public class ComputerUnit : TileObject {
         for(int i = 0; i < possibleMoves.Length; i++)
         {
             //print(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping.name);
-            if(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping != null)
+            if(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping != null && possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping.team != team)
             {
                 isMoving = true;
                 if (possibleMoves[i].GetComponent<MovementPlane>().movementCost <= maxMovementPoints)
                 {
-                    print("in eange");
                     StartCoroutine(FollowRoute(TileObject.TruncateRoute(possibleMoves[i].GetComponent<MovementPlane>().route, maxMovementPoints, true)));
                 }
                 else

@@ -36,7 +36,7 @@ public class TileObject : MonoBehaviour {
             for (int j = 0; j < tile.GetComponent<BasicTile>().spawnTags.Length; j++)
             {
 
-                if (gameObject.CompareTag(tile.GetComponent<BasicTile>().spawnTags[j]))
+                if (gameObject.CompareTag(tile.GetComponent<BasicTile>().spawnTags[j]) && !tile.GetComponent<BasicTile>().IsOccupied)
                 {
                     possibleSpawns.Add(tile);
                 }
