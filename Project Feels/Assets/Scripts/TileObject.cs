@@ -9,9 +9,11 @@ public class TileObject : MonoBehaviour {
     public GameObject presentTile, nextTile, movementPlane;
     public float offsetFromTile, speed;
     public GameObject[] possibleMoves;
-    public int maxMovementPoints;
+    public List<TileObject> objectsWithinRange = new List<TileObject>();
+    public int maxMovementPoints, maxActionPoints;
     public AITurnManager turnManager;
     public int team;
+    public int movementPoints, actionPoints;
 
     [HideInInspector]
     public bool isMoving;
@@ -58,6 +60,8 @@ public class TileObject : MonoBehaviour {
 
         turnManager = GameObject.Find("AITurnManager").GetComponent<AITurnManager>();
         isMoving = false;
+        movementPoints = maxMovementPoints;
+        actionPoints = maxActionPoints;
 
     }
 	
@@ -179,8 +183,6 @@ public class TileObject : MonoBehaviour {
 
             nextTile = grid.Grid(X + route[i].xMovement, Y + route[i].yMovement);
 
-            print(route[i].xMovement + ", " + route[i].yMovement);
-
             while(moveProgress <= 1f)
             {
                 transform.localPosition = CalculateMovement(moveProgress);
@@ -197,8 +199,15 @@ public class TileObject : MonoBehaviour {
             moveProgress = 0f;
         }
         isMoving = false;
+        movementPoints -= MovementPlane.RouteMoveCost(route);
         FinishedMoving();
         yield break;
+    }
+
+    public void NewTurn()
+    {
+        movementPoints = maxMovementPoints;
+        actionPoints = maxActionPoints;
     }
 
     public virtual void FinishedMoving()
@@ -524,20 +533,11 @@ public class TileObject : MonoBehaviour {
         else if (crossingDiagonal)
             return foundMove;
 
-        else if (grid.Grid(xPos + move.xMovement, yPos + move.yMovement).GetComponent<BasicTile>().Accessible(grid.Grid(xPos, yPos).GetComponent<BasicTile>(), unitsBlock))
+        else if (grid.Grid(xPos + move.xMovement, yPos + move.yMovement).GetComponent<BasicTile>().Accessible(grid.Grid(xPos, yPos).GetComponent<BasicTile>(), unitsBlock, team))
         {
             foundMove = true;
 
-            for (int i = 0; i < route.Length; i++)
-            {
-                if (route[i].xMovement != 0 && route[i].yMovement != 0)
-                {
-                        moveCost += 3;
-                }
-
-                else
-                    moveCost += 2;
-            }
+            moveCost = MovementPlane.RouteMoveCost(route);
 
             if (move.xMovement != 0 && move.yMovement != 0)
                 moveCost += 3;
@@ -568,8 +568,73 @@ public class TileObject : MonoBehaviour {
                 //MovementPlane.PrintRoute(route);
             }
         }
+
+        if(grid.Grid(xPos + move.xMovement, yPos + move.yMovement).GetComponent<BasicTile>().IsOccupied)
+        {
+            objectsWithinRange.Add(grid.Grid(xPos + move.xMovement, yPos + move.yMovement).GetComponent<BasicTile>().CharacterStepping);
+        }
+
         return foundMove;
     }
+
+    public bool WithinZMovesFromThis(int z, BasicTile target, bool lineOfSight)
+    {
+        int targetX = target.XPosition,
+            targetY = target.YPosition,
+            tileX = presentTile.GetComponent<BasicTile>().XPosition,
+            tileY = presentTile.GetComponent<BasicTile>().YPosition,
+            deltaX = Mathf.Abs(targetX - tileX),
+            deltaY = Mathf.Abs(targetY - tileY);
+        bool isWithinRange = false, isVisible = true;
+
+        if (targetX == tileX)
+            isWithinRange = 2 * deltaY <= z ? true : false;
+        
+        else if (targetY == tileY)
+            isWithinRange = 2 * deltaX <= z ? true : false;
+        
+        else if (deltaY < deltaX)
+            isWithinRange = deltaY * 2 + (deltaX - deltaY) * 3 <= z ? true : false;
+        
+        else if (deltaX < deltaY)
+            isWithinRange = deltaX * 2 + (deltaY - deltaX) * 3 <= z ? true : false;
+        
+        else if (deltaX == deltaY)
+            isWithinRange = deltaX * 3 <= z ? true : false;
+        
+        else
+        {
+            print("WEIRD SHIT MAYN");
+            isWithinRange = false;
+        }
+
+        if (lineOfSight)
+        {
+            if (z <= 3)
+            {
+                isVisible = target.Accessible(presentTile.GetComponent<BasicTile>(), false, team);
+            }
+            else
+            {
+                RaycastHit hitInfo = new RaycastHit();
+                Ray ray = new Ray(transform.position, target.gameObject.transform.position - transform.position);
+                int mask = 1 << 8;
+                bool hit = Physics.Raycast(ray, out hitInfo, 1000f, mask);
+
+                if (hit)
+                {
+                    isVisible = false;
+                }
+            }
+        }
+
+        if (lineOfSight)
+            return isWithinRange && isVisible;
+
+        else
+            return isWithinRange;
+    }
+
 
     void TestPath(int varX, int varY)
     {
@@ -577,7 +642,7 @@ public class TileObject : MonoBehaviour {
             Y = presentTile.GetComponent<BasicTile>().YPosition;
         BasicTile targetTile = grid.Grid(X + varX, Y + varY).GetComponent<BasicTile>();
 
-        if (targetTile.GetComponent<BasicTile>().Accessible(presentTile.GetComponent<BasicTile>(), true))
+        if (targetTile.GetComponent<BasicTile>().Accessible(presentTile.GetComponent<BasicTile>(), true, team))
         {
             print("CAAAAN DOO");
         }

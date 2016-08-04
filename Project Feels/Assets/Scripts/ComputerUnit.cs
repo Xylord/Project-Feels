@@ -17,6 +17,7 @@ public class ComputerUnit : TileObject {
     public bool isTurn;
 
     public int detectionRange;
+    public TileObject targetObject;
 
 	// Use this for initialization
 	void Start () {
@@ -51,23 +52,39 @@ public class ComputerUnit : TileObject {
         routesFound = 0;
         parsedMoves = 0;
 
-        FindMoves(xPos, yPos, startRoute, routesFound, detectionRange, detectionRange, false);
+        FindMoves(xPos, yPos, startRoute, routesFound, detectionRange, detectionRange, true);
         
-
-        for(int i = 0; i < possibleMoves.Length; i++)
+        for(int i = 0; i < objectsWithinRange.Count; i++)
         {
-            //print(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping.name);
-            if(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping != null && possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping.team != team)
+            if (objectsWithinRange[i].team != team)
             {
-                isMoving = true;
-                if (possibleMoves[i].GetComponent<MovementPlane>().movementCost <= maxMovementPoints)
-                {
-                    StartCoroutine(FollowRoute(TileObject.TruncateRoute(possibleMoves[i].GetComponent<MovementPlane>().route, maxMovementPoints, true)));
-                }
-                else
-                    StartCoroutine(FollowRoute(TileObject.TruncateRoute(possibleMoves[i].GetComponent<MovementPlane>().route, maxMovementPoints, false)));
-                ClearMoves();
+                targetObject = objectsWithinRange[i];
                 break;
+            }
+        }
+        if (targetObject != null)
+        {
+            for (int i = 0; i < possibleMoves.Length; i++)
+            {
+                if (targetObject.WithinZMovesFromThis(3, possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>(), true))// && targetObject.presentTile.GetComponent<BasicTile>().Accessible(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>(), true))
+                {
+                    isMoving = true;
+                    /*if (possibleMoves[i].GetComponent<MovementPlane>().movementCost <= maxMovementPoints)
+                    {
+                        StartCoroutine(FollowRoute(TileObject.TruncateRoute(possibleMoves[i].GetComponent<MovementPlane>().route, maxMovementPoints, true)));
+                    }
+                    else*/
+                    StartCoroutine(FollowRoute(TileObject.TruncateRoute(possibleMoves[i].GetComponent<MovementPlane>().route, maxMovementPoints, false)));
+                    ClearMoves();
+                    break;
+                }
+
+
+                //print(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping.name);
+                /*if(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping != null && possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping.team != team)
+                {
+
+                }*/
             }
         }
         //StartCoroutine(NewFindMovesCorout(xPos, yPos, startRoute, routesFound, maxMovementPoints));

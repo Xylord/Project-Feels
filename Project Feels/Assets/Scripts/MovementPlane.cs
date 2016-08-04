@@ -61,6 +61,24 @@ public class MovementPlane : MonoBehaviour
         }
     }
 
+    public static int RouteMoveCost(Movement[] route)
+    {
+        int moveCost = 0;
+
+        for (int i = 0; i < route.Length; i++)
+        {
+            if (route[i].xMovement != 0 && route[i].yMovement != 0)
+            {
+                moveCost += 3;
+            }
+
+            else
+                moveCost += 2;
+        }
+
+        return moveCost;
+    }
+
     void DrawRoute(Movement[] drawnRoute)
     {
         int X = presentTile.GetComponent<BasicTile>().XPosition,

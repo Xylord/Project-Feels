@@ -11,10 +11,12 @@ public class AnimateCamera : MonoBehaviour
     public GameObject targetObject;
     private bool movingTowardsTarget = false;
 
-    private float lerpSpeed = 0.025f;
+    //private float lerpSpeed = 0.025f;
     private Transform initialRot;
     private Transform finalRot;
-    private bool inPosition;
+    //private bool inPosition;
+
+    public Vector3 springArmOffset;
 
 
 	// Use this for initialization
@@ -24,6 +26,7 @@ public class AnimateCamera : MonoBehaviour
 	}
 	
 	// Update is called once per frame
+
 	void Update ()
     { 
         //Activated by pressing E
@@ -35,8 +38,8 @@ public class AnimateCamera : MonoBehaviour
             }
             else
             {
-                initialRot = gameObject.transform;
-                finalRot = targetObject.transform;
+                //initialRot = gameObject.transform;
+                //finalRot.rotati(null);
                 movingTowardsTarget = true;
             }
         }
@@ -52,17 +55,17 @@ public class AnimateCamera : MonoBehaviour
         transform.position = Vector3.MoveTowards(transform.position, target.transform.position, moveSpeed * Time.deltaTime);
 
         //Move the camera to the target position.
-        if (Vector3.Distance(transform.position,target.transform.position) < 0.1)
+        if (Vector3.Distance(transform.position,target.transform.position) < 0.1 + springArmOffset.magnitude)
         {
-            transform.position = target.transform.position;
-            inPosition = true;
+            transform.position = target.transform.position + springArmOffset;
+            //inPosition = true;
 
             //movingTowardsTarget = false;
 
         }
 
         //Rotate the camera towards the object.
-        if (inPosition)
+        /*if (inPosition)
         {
             if (Mathf.Abs(initialRot.localEulerAngles.y - finalRot.localEulerAngles.y) < 3)
             {
@@ -76,6 +79,18 @@ public class AnimateCamera : MonoBehaviour
             {
                 transform.rotation = Quaternion.Lerp(initialRot.rotation, finalRot.rotation, Time.time * lerpSpeed);
             }
+        }*/
+    }
+
+    public GameObject TargetObject
+    {
+        get
+        {
+            return targetObject;
+        }
+        set
+        {
+            targetObject = value;
         }
     }
 }

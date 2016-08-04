@@ -12,7 +12,7 @@ public class LevelGrid : MonoBehaviour {
     public float gridScale, verticalScale;
     public int minHeight, maxHeight, xSize, ySize;
 
-    public Mesh foundation, stair;
+    public GameObject foundation, stair;
     public Material[] tileMaterials;
 	public List<BasicTile> spawnTiles = new List<BasicTile>();
 

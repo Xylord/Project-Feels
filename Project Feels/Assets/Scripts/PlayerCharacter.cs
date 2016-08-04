@@ -4,7 +4,7 @@ using System.Collections;
 [ExecuteInEditMode]
 public class PlayerCharacter : TileObject {
 
-    public bool isSelected, mouseOver;
+    public bool mouseOver;
 
 
 	// Use this for initialization
@@ -14,7 +14,7 @@ public class PlayerCharacter : TileObject {
 	
 	// Update is called once per frame
 	void Update () {
-        if (isSelected)
+        if (turnManager.SelectedUnit == this)
             gameObject.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.blue);
 
         else if (mouseOver)
@@ -32,9 +32,13 @@ public class PlayerCharacter : TileObject {
             {
                 Selecting();
 
-                if (Input.GetKeyDown(KeyCode.M) && isSelected)
+                if (Input.GetKeyDown(KeyCode.B))
                 {
-                    print("Showing moves");
+                    turnManager.PlayerTurnEnd();
+                }
+
+                if (Input.GetKeyDown(KeyCode.M) && turnManager.SelectedUnit == this)
+                {
                     ShowMoves();
                 }
                 
@@ -50,7 +54,8 @@ public class PlayerCharacter : TileObject {
     void Selecting()
     {
         RaycastHit hitInfo = new RaycastHit();
-        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo);
+        int mask = ~(1 << 8) ;
+        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, mask);
 
         if (hit)
         {
@@ -58,11 +63,11 @@ public class PlayerCharacter : TileObject {
             {
                 if (hitInfo.transform.gameObject.GetComponent<PlayerCharacter>() == this)
                 {
-                    hitInfo.transform.gameObject.GetComponent<PlayerCharacter>().isSelected = true;
+                    turnManager.SelectedUnit = hitInfo.transform.gameObject.GetComponent<PlayerCharacter>();
                 }
-                else if (hitInfo.transform.gameObject.GetComponent<MovementPlane>() != null && isSelected)
+                else if (hitInfo.transform.gameObject.GetComponent<MovementPlane>() != null && turnManager.SelectedUnit == this)
                 {
-                    isSelected = false;
+                    turnManager.SelectedUnit = null;
                     isMoving = true;
                     GameObject move = hitInfo.transform.gameObject;
                     StartCoroutine(FollowRoute(TileObject.TruncateRoute(move.GetComponent<MovementPlane>().route, 32, false)));
@@ -81,7 +86,7 @@ public class PlayerCharacter : TileObject {
 
     public override void FinishedMoving()
     {
-        turnManager.PlayerTurnEnd();
+
     }
 
     void ShowMoves()
@@ -98,11 +103,14 @@ public class PlayerCharacter : TileObject {
         routesFound = 0;
         parsedMoves = 0;
 
-        FindMoves(xPos, yPos, startRoute, routesFound, maxMovementPoints, maxMovementPoints, true);
+        FindMoves(xPos, yPos, startRoute, routesFound, movementPoints, movementPoints, true);
         //StartCoroutine(NewFindMovesCorout(xPos, yPos, startRoute, routesFound, maxMovementPoints));
-
 
     }
 
+    void DisplayAttacks(int attackRange)
+    {
+
+    }
 
 }

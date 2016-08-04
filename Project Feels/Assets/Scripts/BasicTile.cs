@@ -42,7 +42,7 @@ public class BasicTile : MonoBehaviour {
     
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
         InitializeTile();
 	}
 
@@ -101,7 +101,6 @@ public class BasicTile : MonoBehaviour {
 		{
 			grid.spawnTiles.Add (this);
 		}
-			
 
         if (Application.isEditor)
         {
@@ -119,67 +118,67 @@ public class BasicTile : MonoBehaviour {
                 Destroy(gameObject.transform.GetChild(1).gameObject);
         }
 
-        GameObject myFoundation = Instantiate(foundation);
-        myFoundation.name = "foundation";
-        myFoundation.transform.parent = transform;
-
-        myFoundation.transform.localPosition = Vector3.zero;
+        //foundation = Instantiate(grid.emptyTile);
+        
 
         if (type == TileKind.Empty)
         {
-            myFoundation.GetComponent<MeshFilter>().mesh = grid.foundation;
-            myFoundation.GetComponent<MeshRenderer>().material = grid.tileMaterials[0];
-            return;
+            foundation = Instantiate(grid.emptyTile);
+            foundation.name = "foundation";
+            foundation.transform.parent = transform;
+            foundation.transform.localPosition = Vector3.zero;
         }
 
         else if (type == TileKind.Flat)
         {
-            myFoundation.GetComponent<MeshFilter>().mesh = grid.foundation;
-            myFoundation.GetComponent<MeshRenderer>().material = grid.tileMaterials[1];
+            foundation = Instantiate(grid.foundation);
+            foundation.name = "foundation";
+            foundation.transform.parent = transform;
+            foundation.transform.localPosition = Vector3.zero;
+            //foundation.GetComponent<MeshRenderer>().material = grid.tileMaterials[1];
         }
 
         else if (type == TileKind.Stair)
         {
-            GameObject myTop = Instantiate(top);
-            myTop.name = "top";
-            myTop.transform.parent = transform;
-            myTop.transform.localPosition = Vector3.zero;
+            top = Instantiate(grid.stair);
+            top.name = "top";
+            top.transform.parent = transform;
+            top.transform.localPosition = Vector3.zero;
 
-            myFoundation.GetComponent<MeshFilter>().mesh = grid.foundation;
-            myFoundation.GetComponent<MeshRenderer>().material = grid.tileMaterials[1];
-            myTop.GetComponent<MeshFilter>().mesh = grid.stair;
-            myTop.GetComponent<MeshRenderer>().material = grid.tileMaterials[1];
-
-            myFoundation.transform.localPosition -= new Vector3(0f, 0.5f, 0f);
-            myTop.transform.localPosition += new Vector3(0f, 0.25f, 0f);
+            foundation = Instantiate(grid.foundation);
+            foundation.name = "foundation";
+            foundation.transform.parent = transform;
+            foundation.transform.localPosition = Vector3.zero;
+            foundation.transform.localPosition = new Vector3(0f, -0.5f, 0f);
+            top.transform.localPosition = new Vector3(0f, 0.25f, 0f);
 
 
             switch (orientation)
             {
                 case Orientation.Forward:
-                    myTop.transform.localRotation = Quaternion.Euler(0f, 270f, 0f);
+                    top.transform.localRotation = Quaternion.Euler(0f, 270f, 0f);
                     break;
 
                 case Orientation.Backward:
-                    myTop.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+                    top.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
                     break;
 
                 case Orientation.Right:
-                    myTop.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+                    top.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
                     break;
 
                 case Orientation.Left:
-                    myTop.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                    top.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
                     break;
 
                 case Orientation.Directionless:
-                    myTop.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+                    top.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
                     break;
             }
         }
     }
 
-    public bool Accessible(BasicTile originTile, bool unitsBlock)
+    public bool Accessible(BasicTile originTile, bool unitsBlock, int team)
     {
         bool diagonal = false, aroundCorner = false, 
             sameHeight = originTile.PresentHeight == presentHeight;
@@ -210,14 +209,14 @@ public class BasicTile : MonoBehaviour {
             return false;
         }
 
-        else if (isOccupied && unitsBlock)
+        else if (!(originTile.PresentHeight == presentHeight + 1
+            || originTile.PresentHeight == presentHeight
+            || originTile.PresentHeight == presentHeight - 1))
         {
             return false;
         }
 
-        else if (!(originTile.PresentHeight == presentHeight + 1
-            || originTile.PresentHeight == presentHeight
-            || originTile.PresentHeight == presentHeight - 1))
+        else if (isOccupied && unitsBlock && team != CharacterStepping.team)
         {
             return false;
         }
@@ -246,6 +245,7 @@ public class BasicTile : MonoBehaviour {
 
         else if (originTile.type == TileKind.Stair)
         {
+
             if (moveDirection != InvertOrientation(originTile.orientation) && moveDirection != originTile.orientation && originTile.orientation == orientation)
             {
                 print("Move thing");
@@ -259,6 +259,7 @@ public class BasicTile : MonoBehaviour {
             {
                 return false;
             }*/
+
             else if (originTile.orientation == moveDirection)
             {
                 if (type == TileKind.Flat && sameHeight)
@@ -337,6 +338,8 @@ public class BasicTile : MonoBehaviour {
                 return false;
             }
         }
+        
+
         return false;
     }
 

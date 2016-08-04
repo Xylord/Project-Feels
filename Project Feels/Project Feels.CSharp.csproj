@@ -156,12 +156,14 @@
     <Compile Include="Assets\Scripts\AITurnManager.cs" />
     <Compile Include="Assets\Scripts\AnimateCamera.cs" />
     <Compile Include="Assets\Scripts\BasicTile.cs" />
+    <Compile Include="Assets\Scripts\CameraControl.cs" />
     <Compile Include="Assets\Scripts\ComputerUnit.cs" />
     <Compile Include="Assets\Scripts\LevelGrid.cs" />
     <Compile Include="Assets\Scripts\MovementPlane.cs" />
     <Compile Include="Assets\Scripts\PlayerCharacter.cs" />
     <Compile Include="Assets\Scripts\TileObject.cs" />
     <Compile Include="Assets\Scripts\ToolBox.cs" />
+    <Compile Include="Assets\Scripts\TouchCameraControl.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\AstarPathfindingProject\Editor\EditorAssets\Materials\Navmesh.shader" />
