@@ -51,13 +51,43 @@ public class MovementPlane : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.localPosition = presentTile.transform.position + new Vector3(0f, offsetFromTile, 0f);
-        DrawRoute(route);
-
-        routesInString = new string[route.Length];
-        for(int i = 0; i < route.Length; i++)
+        if(presentTile.GetComponent<BasicTile>().type == BasicTile.TileKind.Stair)
         {
-            routesInString[i] = route[i].xMovement + " " + route[i].yMovement;
+            transform.localPosition = presentTile.transform.position + new Vector3(0f, offsetFromTile - 0.25f, 0f);
+            Quaternion rot = Quaternion.identity;
+            switch (presentTile.GetComponent<BasicTile>().orientation)
+            {
+                case BasicTile.Orientation.Forward:
+                    rot = Quaternion.Euler(90f - Mathf.Rad2Deg * Mathf.Atan(0.5f), 90f, 0f);
+                    break;
+
+                case BasicTile.Orientation.Backward:
+                    rot = Quaternion.Euler(90f + Mathf.Rad2Deg * Mathf.Atan(0.5f), 90f, 0f);
+                    break;
+
+                case BasicTile.Orientation.Right:
+                    rot = Quaternion.Euler(90f + Mathf.Rad2Deg * Mathf.Atan(0.5f), 0f, 0f);
+                    break;
+
+                case BasicTile.Orientation.Left:
+                    rot = Quaternion.Euler(90f - Mathf.Rad2Deg * Mathf.Atan(0.5f), 0f, 0f);
+                    break;
+            }
+
+            transform.localRotation = rot;
+        }
+        else
+            transform.localPosition = presentTile.transform.position + new Vector3(0f, offsetFromTile, 0f);
+
+        if (route != null)
+        {
+            DrawRoute(route);
+
+            routesInString = new string[route.Length];
+            for (int i = 0; i < route.Length; i++)
+            {
+                routesInString[i] = route[i].xMovement + " " + route[i].yMovement;
+            }
         }
     }
 

@@ -52,17 +52,17 @@ public class AnimateCamera : MonoBehaviour
 
     public void MoveTowardsTarget(GameObject target)
     {
-        transform.position = Vector3.MoveTowards(transform.position, target.transform.position, moveSpeed * Time.deltaTime);
+        transform.position = Vector3.Slerp(transform.position, target.transform.position + springArmOffset, moveSpeed * Time.deltaTime);
 
         //Move the camera to the target position.
-        if (Vector3.Distance(transform.position,target.transform.position) < 0.1 + springArmOffset.magnitude)
+        /*if (Vector3.Distance(transform.position,target.transform.position) < 0.1 + springArmOffset.magnitude)
         {
             transform.position = target.transform.position + springArmOffset;
             //inPosition = true;
 
             //movingTowardsTarget = false;
 
-        }
+        }*/
 
         //Rotate the camera towards the object.
         /*if (inPosition)

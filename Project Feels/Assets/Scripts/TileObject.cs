@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,7 +7,7 @@ using System.Collections.Generic;
 public class TileObject : MonoBehaviour {
 
     public LevelGrid grid;
-    public GameObject presentTile, nextTile, movementPlane;
+    public GameObject presentTile, nextTile, movementPlane, attackPlane, targetPlane;
     public float offsetFromTile, speed;
     public GameObject[] possibleMoves;
     public List<TileObject> objectsWithinRange = new List<TileObject>();
@@ -14,6 +15,7 @@ public class TileObject : MonoBehaviour {
     public AITurnManager turnManager;
     public int team;
     public int movementPoints, actionPoints;
+    public Image descriptionBox;
 
     [HideInInspector]
     public bool isMoving;
@@ -63,6 +65,8 @@ public class TileObject : MonoBehaviour {
         movementPoints = maxMovementPoints;
         actionPoints = maxActionPoints;
 
+        //UI
+        descriptionBox = gameObject.transform.FindChild("PlayerCanvas").FindChild("MouseOverText").GetComponent<Image>();
     }
 	
 	// Update is called once per frame
@@ -242,6 +246,49 @@ public class TileObject : MonoBehaviour {
         }
 
         return Vector3.Lerp(oldPosition, newPosition, moveProgress) + new Vector3(0f, offsetFromTile, 0f);
+    }
+
+    public void DisplayAttacks(int attackRange)
+    {
+        ClearMoves();
+
+        int xPos = presentTile.GetComponent<BasicTile>().XPosition,
+            yPos = presentTile.GetComponent<BasicTile>().YPosition,
+            maxRadius = attackRange / 2,
+            attacksFound = 0;
+        
+        possibleMoves = new GameObject[(int)Mathf.Pow(maxRadius * 2 + 1, 2)];
+
+        for (int i = -maxRadius; i <= maxRadius; i++)
+        {
+            for (int j = -maxRadius; j <= maxRadius; j++)
+            {
+                if (xPos + i < 0 || xPos + i >= grid.xSize)
+                    continue;
+                
+                if (yPos + j < 0 || yPos + j >= grid.ySize)
+                    continue;
+                
+                
+                if (WithinZMovesFromThis(attackRange, grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>(), false) && !(i == 0 && j == 0))
+                {
+                    if (grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>().IsOccupied)
+                    {
+                        objectsWithinRange.Add(grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>().CharacterStepping);
+                        possibleMoves[attacksFound] = Instantiate(targetPlane);
+                    }
+                    else
+                    {
+                        possibleMoves[attacksFound] = Instantiate(attackPlane);
+                    }
+
+                    possibleMoves[attacksFound].GetComponent<MovementPlane>().presentTile = grid.Grid(xPos + i, yPos + j);
+                    possibleMoves[attacksFound].name = "Move " + (xPos + i) + " " + (yPos + j);
+                    possibleMoves[attacksFound].GetComponent<MovementPlane>().route = null;
+                    attacksFound++;
+                }
+            }
+        }
     }
 
     public void FindMoves(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft, int maxMoves, bool unitsBlock)
@@ -486,6 +533,7 @@ public class TileObject : MonoBehaviour {
         yield break;
     }
     */
+
     bool DiagonalsCrossing(MovementPlane.Movement move1, MovementPlane.Movement move2)
     {
         bool crossing = false;
@@ -585,6 +633,7 @@ public class TileObject : MonoBehaviour {
             tileY = presentTile.GetComponent<BasicTile>().YPosition,
             deltaX = Mathf.Abs(targetX - tileX),
             deltaY = Mathf.Abs(targetY - tileY);
+
         bool isWithinRange = false, isVisible = true;
 
         if (targetX == tileX)
@@ -610,22 +659,25 @@ public class TileObject : MonoBehaviour {
 
         if (lineOfSight)
         {
-            if (z <= 3)
+            /*if (z <= 3)
             {
                 isVisible = target.Accessible(presentTile.GetComponent<BasicTile>(), false, team);
             }
             else
-            {
+            {*/
                 RaycastHit hitInfo = new RaycastHit();
-                Ray ray = new Ray(transform.position, target.gameObject.transform.position - transform.position);
+                Ray ray = new Ray(presentTile.transform.position + new Vector3(0f, 1f, 0f), target.gameObject.transform.position - presentTile.transform.position);
+                Debug.DrawRay(presentTile.transform.position + new Vector3(0f, 1f, 0f), target.gameObject.transform.position - presentTile.transform.position, Color.green, 60f);
+                
                 int mask = 1 << 8;
                 bool hit = Physics.Raycast(ray, out hitInfo, 1000f, mask);
-
                 if (hit)
                 {
-                    isVisible = false;
+
+                print(target + " " + hitInfo.collider.gameObject + " " + hit);
+                isVisible = false;
                 }
-            }
+            //}
         }
 
         if (lineOfSight)
@@ -634,7 +686,6 @@ public class TileObject : MonoBehaviour {
         else
             return isWithinRange;
     }
-
 
     void TestPath(int varX, int varY)
     {

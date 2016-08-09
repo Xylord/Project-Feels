@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 [ExecuteInEditMode]
 public class PlayerCharacter : TileObject {
 
     public bool mouseOver;
-
+    
 
 	// Use this for initialization
 	void Start () {
@@ -15,13 +16,22 @@ public class PlayerCharacter : TileObject {
 	// Update is called once per frame
 	void Update () {
         if (turnManager.SelectedUnit == this)
+        {
             gameObject.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.blue);
+            descriptionBox.enabled = true;
+        }
 
         else if (mouseOver)
+        {
             gameObject.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.red);
-        
+            descriptionBox.enabled = true;
+        }
+
         else
+        {
             gameObject.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.white);
+            descriptionBox.enabled = false;
+        }
 
 
         if (!isMoving)
@@ -35,6 +45,11 @@ public class PlayerCharacter : TileObject {
                 if (Input.GetKeyDown(KeyCode.B))
                 {
                     turnManager.PlayerTurnEnd();
+                }
+
+                if (Input.GetKeyDown(KeyCode.A) && turnManager.SelectedUnit == this)
+                {
+                    DisplayAttacks(8);
                 }
 
                 if (Input.GetKeyDown(KeyCode.M) && turnManager.SelectedUnit == this)
@@ -108,9 +123,6 @@ public class PlayerCharacter : TileObject {
 
     }
 
-    void DisplayAttacks(int attackRange)
-    {
-
-    }
+    
 
 }
