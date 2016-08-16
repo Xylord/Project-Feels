@@ -5,7 +5,7 @@ using System.Collections;
 [ExecuteInEditMode]
 public class PlayerCharacter : TileObject {
 
-    public bool mouseOver;
+    //public bool mouseOver;
     
 
 	// Use this for initialization
@@ -21,7 +21,7 @@ public class PlayerCharacter : TileObject {
             descriptionBox.enabled = true;
         }
 
-        else if (mouseOver)
+        else if (turnManager.mouseOverObject == gameObject)
         {
             gameObject.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.red);
             descriptionBox.enabled = true;
@@ -49,7 +49,7 @@ public class PlayerCharacter : TileObject {
 
                 if (Input.GetKeyDown(KeyCode.A) && turnManager.SelectedUnit == this)
                 {
-                    DisplayAttacks(8);
+                    DisplayAttacks(8, 1, 3);
                 }
 
                 if (Input.GetKeyDown(KeyCode.M) && turnManager.SelectedUnit == this)
@@ -82,21 +82,39 @@ public class PlayerCharacter : TileObject {
                 }
                 else if (hitInfo.transform.gameObject.GetComponent<MovementPlane>() != null && turnManager.SelectedUnit == this)
                 {
+                    MovementPlane movePlane = hitInfo.transform.gameObject.GetComponent<MovementPlane>();
+                    if (movePlane.Target)
+                    {
+                        print("Doing attack");
+                        movePlane.ExecuteAttack();
+                    }
+                    else
+                    {
+                        isMoving = true;
+                        GameObject move = hitInfo.transform.gameObject;
+                        StartCoroutine(FollowRoute(TileObject.TruncateRoute(move.GetComponent<MovementPlane>().route, 32, false)));
+                    }
                     turnManager.SelectedUnit = null;
-                    isMoving = true;
-                    GameObject move = hitInfo.transform.gameObject;
-                    StartCoroutine(FollowRoute(TileObject.TruncateRoute(move.GetComponent<MovementPlane>().route, 32, false)));
                     ClearMoves();
                 }
             }
             else
             {
                 if (hitInfo.transform.gameObject.GetComponent<PlayerCharacter>() == this)
-                    mouseOver = true;
+                    turnManager.mouseOverObject = gameObject;
+                else if (hitInfo.transform.gameObject.GetComponent<MovementPlane>() != null)
+                {
+                    if (hitInfo.transform.gameObject.GetComponent<MovementPlane>().Target)
+                    {
+                        
+                        turnManager.mouseOverObject = hitInfo.transform.gameObject;
+                    }
+                }
             }
         }
         else
-            mouseOver = false;
+            if(turnManager.mouseOverObject == gameObject)
+                turnManager.mouseOverObject = null;
     }
 
     public override void FinishedMoving()

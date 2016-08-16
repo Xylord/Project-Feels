@@ -4,18 +4,20 @@ using System.Collections;
 using System.Collections.Generic;
 
 [ExecuteInEditMode]
-public class TileObject : MonoBehaviour {
-
-    public LevelGrid grid;
-    public GameObject presentTile, nextTile, movementPlane, attackPlane, targetPlane;
-    public float offsetFromTile, speed;
+public class TileObject : BasicTileObject
+{
+    public GameObject movementPlane, attackPlane, targetPlane;
+    public float speed;
     public GameObject[] possibleMoves;
     public List<TileObject> objectsWithinRange = new List<TileObject>();
-    public int maxMovementPoints, maxActionPoints;
+    public int maxMovementPoints, maxActionPoints, maxHP, maxSanity;
     public AITurnManager turnManager;
     public int team;
     public int movementPoints, actionPoints;
     public Image descriptionBox;
+
+    
+    public int hP, sanity;
 
     [HideInInspector]
     public bool isMoving;
@@ -64,6 +66,8 @@ public class TileObject : MonoBehaviour {
         isMoving = false;
         movementPoints = maxMovementPoints;
         actionPoints = maxActionPoints;
+        hP = maxHP;
+        sanity = maxSanity;
 
         //UI
         descriptionBox = gameObject.transform.FindChild("PlayerCanvas").FindChild("MouseOverText").GetComponent<Image>();
@@ -117,23 +121,6 @@ public class TileObject : MonoBehaviour {
             }
             return;
         }*/
-    }
-
-    public void NotMovingUpdate()
-    {
-        if (nextTile == null)
-        {
-            switch (presentTile.GetComponent<BasicTile>().type)
-            {
-                case BasicTile.TileKind.Flat:
-                    transform.localPosition = presentTile.transform.position + new Vector3(0f, offsetFromTile, 0f);
-                    break;
-
-                case BasicTile.TileKind.Stair:
-                    transform.localPosition = presentTile.transform.position + new Vector3(0f, offsetFromTile - 0.25f, 0f);
-                    break;
-            }
-        }
     }
 
     static public MovementPlane.Movement[] TruncateRoute(MovementPlane.Movement[] truncatedRoute, int newMovementCost, bool removeLastMove)
@@ -248,7 +235,7 @@ public class TileObject : MonoBehaviour {
         return Vector3.Lerp(oldPosition, newPosition, moveProgress) + new Vector3(0f, offsetFromTile, 0f);
     }
 
-    public void DisplayAttacks(int attackRange)
+    public void DisplayAttacks(int attackRange, int damage, int aOERange)
     {
         ClearMoves();
 
@@ -275,6 +262,7 @@ public class TileObject : MonoBehaviour {
                     if (grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>().IsOccupied)
                     {
                         objectsWithinRange.Add(grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>().CharacterStepping);
+                        print("Added target");
                         possibleMoves[attacksFound] = Instantiate(targetPlane);
                     }
                     else
@@ -282,12 +270,26 @@ public class TileObject : MonoBehaviour {
                         possibleMoves[attacksFound] = Instantiate(attackPlane);
                     }
 
+                    possibleMoves[attacksFound].GetComponent<MovementPlane>().aOERange = aOERange;
+                    possibleMoves[attacksFound].GetComponent<MovementPlane>().Damage = damage;
+                    possibleMoves[attacksFound].GetComponent<MovementPlane>().Target = true;
                     possibleMoves[attacksFound].GetComponent<MovementPlane>().presentTile = grid.Grid(xPos + i, yPos + j);
                     possibleMoves[attacksFound].name = "Move " + (xPos + i) + " " + (yPos + j);
                     possibleMoves[attacksFound].GetComponent<MovementPlane>().route = null;
+                    possibleMoves[attacksFound].GetComponent<MovementPlane>().FindAOE();
                     attacksFound++;
                 }
             }
+        }
+    }
+
+    public void Damage(int damage)
+    {
+        hP -= damage;
+
+        if(hP <= 0)
+        {
+            Destroy(this);
         }
     }
 
@@ -597,6 +599,7 @@ public class TileObject : MonoBehaviour {
                 possibleMoves[movesFound].GetComponent<MovementPlane>().presentTile = grid.Grid(xPos + move.xMovement, yPos + move.yMovement);
                 possibleMoves[movesFound].name = "Move " + (xPos + move.xMovement) + " " + (yPos + move.yMovement);
                 possibleMoves[movesFound].GetComponent<MovementPlane>().route = new MovementPlane.Movement[route.Length + 1];
+                possibleMoves[movesFound].GetComponent<MovementPlane>().Target = false;
 
                 for (int i = 0; i < route.Length; i++)
                 {
@@ -604,7 +607,7 @@ public class TileObject : MonoBehaviour {
                 }
 
                 possibleMoves[movesFound].GetComponent<MovementPlane>().route[route.Length] = move;
-
+                possibleMoves[movesFound].GetComponent<MovementPlane>().Damage = 0;
                 possibleMoves[movesFound].GetComponent<MovementPlane>().movementCost = moveCost;
                 possibleMoves[movesFound].name += " costs " + possibleMoves[movesFound].GetComponent<MovementPlane>().movementCost;
 

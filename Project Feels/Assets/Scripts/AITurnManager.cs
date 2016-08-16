@@ -10,6 +10,7 @@ public class AITurnManager : MonoBehaviour {
     private PlayerCharacter[] spawnedPCs;
     public bool playerTurn;
     private PlayerCharacter selectedUnit;
+    public GameObject mouseOverObject;
 
     // Use this for initialization
     void Start () {

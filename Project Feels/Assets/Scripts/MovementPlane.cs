@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [ExecuteInEditMode]
 public class MovementPlane : MonoBehaviour
@@ -16,14 +17,21 @@ public class MovementPlane : MonoBehaviour
         }
     }
 
-    public LevelGrid grid;
+    private LevelGrid grid;
     public GameObject presentTile;
+    public GameObject AOEIndicator;
+    private List<TileObject> objectsInRange = new List<TileObject>();
     public float offsetFromTile;
+    
+    public AITurnManager turnManager;
 
     public int movementCost;
     public Movement[] route;
     public string[] routesInString;
     public LineRenderer routeLine;
+    public GameObject[] areaOfEffectObjects;
+    private bool target, showingRange;
+    public int damage, aOERange;
 
     //private TextMesh coordinates;
 
@@ -33,11 +41,35 @@ public class MovementPlane : MonoBehaviour
         InitializeMovementPlane();
     }
 
+    public void ExecuteAttack()
+    {
+        for(int i = 0; i < objectsInRange.Count; i++)
+        {
+            print("Object in range : " + objectsInRange[i]);
+            objectsInRange[i].GetComponent<TileObject>().Damage(damage);
+        }
+    }
+
+    void OnDestroy()
+    {
+
+        print("Destroying indicators");
+        for (int i = 0; i < areaOfEffectObjects.Length; i++)
+        {
+            if (areaOfEffectObjects[i] != null)
+            {
+                Destroy(areaOfEffectObjects[i]);
+            }
+        }
+        areaOfEffectObjects = null;
+    }
+
     public void InitializeMovementPlane()
     {
         grid = GameObject.Find("Grid").GetComponent<LevelGrid>();
         transform.parent = grid.gameObject.transform;
-        routeLine = gameObject.AddComponent<LineRenderer>();
+        turnManager = GameObject.Find("AITurnManager").GetComponent<AITurnManager>();
+        //routeLine = gameObject.AddComponent<LineRenderer>();
         /*GameObject text = new GameObject();
         coordinates = text.AddComponent<TextMesh>();
         text.transform.parent = transform;
@@ -81,7 +113,7 @@ public class MovementPlane : MonoBehaviour
 
         if (route != null)
         {
-            DrawRoute(route);
+            //DrawRoute(route);
 
             routesInString = new string[route.Length];
             for (int i = 0; i < route.Length; i++)
@@ -89,6 +121,136 @@ public class MovementPlane : MonoBehaviour
                 routesInString[i] = route[i].xMovement + " " + route[i].yMovement;
             }
         }
+
+        if (turnManager.mouseOverObject == gameObject)
+            ShowAOE();
+
+        else
+            HideAOE();
+    }
+
+    public bool WithinZMovesFromThis(int z, BasicTile target, bool lineOfSight)
+    {
+        int targetX = target.XPosition,
+            targetY = target.YPosition,
+            tileX = presentTile.GetComponent<BasicTile>().XPosition,
+            tileY = presentTile.GetComponent<BasicTile>().YPosition,
+            deltaX = Mathf.Abs(targetX - tileX),
+            deltaY = Mathf.Abs(targetY - tileY);
+
+        bool isWithinRange = false, isVisible = true;
+
+        if (targetX == tileX)
+            isWithinRange = 2 * deltaY <= z ? true : false;
+
+        else if (targetY == tileY)
+            isWithinRange = 2 * deltaX <= z ? true : false;
+
+        else if (deltaY < deltaX)
+            isWithinRange = deltaY * 2 + (deltaX - deltaY) * 3 <= z ? true : false;
+
+        else if (deltaX < deltaY)
+            isWithinRange = deltaX * 2 + (deltaY - deltaX) * 3 <= z ? true : false;
+
+        else if (deltaX == deltaY)
+            isWithinRange = deltaX * 3 <= z ? true : false;
+
+        else
+        {
+            print("WEIRD SHIT MAYN");
+            isWithinRange = false;
+        }
+
+        if (lineOfSight)
+        {
+            /*if (z <= 3)
+            {
+                isVisible = target.Accessible(presentTile.GetComponent<BasicTile>(), false, team);
+            }
+            else
+            {*/
+            RaycastHit hitInfo = new RaycastHit();
+            Ray ray = new Ray(presentTile.transform.position + new Vector3(0f, 1f, 0f), target.gameObject.transform.position - presentTile.transform.position);
+            Debug.DrawRay(presentTile.transform.position + new Vector3(0f, 1f, 0f), target.gameObject.transform.position - presentTile.transform.position, Color.green, 60f);
+
+            int mask = 1 << 8;
+            bool hit = Physics.Raycast(ray, out hitInfo, 1000f, mask);
+            if (hit)
+            {
+
+                print(target + " " + hitInfo.collider.gameObject + " " + hit);
+                isVisible = false;
+            }
+            //}
+        }
+
+        if (lineOfSight)
+            return isWithinRange && isVisible;
+
+        else
+            return isWithinRange;
+    }
+
+    public void ShowAOE()
+    {
+        for (int i = 0; i < areaOfEffectObjects.Length; i++)
+        {
+            if (areaOfEffectObjects[i] != null)
+            {
+                areaOfEffectObjects[i].SetActive(true);
+            }
+        }
+    }
+
+    public void HideAOE()
+    {
+        for(int i = 0; i < areaOfEffectObjects.Length; i++)
+        {
+            if(areaOfEffectObjects[i] != null)
+            {
+                areaOfEffectObjects[i].SetActive(false);
+            }
+        }
+    }
+
+    public void FindAOE()
+    {
+        InitializeMovementPlane();
+
+        int xPos = presentTile.GetComponent<BasicTile>().XPosition,
+            yPos = presentTile.GetComponent<BasicTile>().YPosition,
+            maxRadius = aOERange / 2,
+            affectedTiles = 0;
+
+        areaOfEffectObjects = new GameObject[(int)Mathf.Pow(maxRadius * 2 + 1, 2)];
+
+        for (int i = -maxRadius; i <= maxRadius; i++)
+        {
+            for (int j = -maxRadius; j <= maxRadius; j++)
+            {
+                if (xPos + i < 0 || xPos + i >= grid.xSize)
+                    continue;
+
+                if (yPos + j < 0 || yPos + j >= grid.ySize)
+                    continue;
+
+                if (WithinZMovesFromThis(aOERange, grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>(), false))
+                {
+                    if (grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>().IsOccupied)
+                    {
+                        objectsInRange.Add(grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>().CharacterStepping);
+                    }
+
+                    areaOfEffectObjects[affectedTiles] = Instantiate(AOEIndicator);
+                    areaOfEffectObjects[affectedTiles].GetComponent<BasicTileObject>().presentTile = grid.Grid(xPos + i, yPos + j);
+                    
+
+                    affectedTiles++;
+                }
+            }
+        }
+
+        HideAOE();
     }
 
     public static int RouteMoveCost(Movement[] route)
@@ -144,5 +306,39 @@ public class MovementPlane : MonoBehaviour
         print(routeString);
     }
 
-    
+    public bool Target
+    {
+        get
+        {
+            return target;
+        }
+        set
+        {
+            target = value;
+        }
+    }
+
+    public bool ShowingRange
+    {
+        get
+        {
+            return showingRange;
+        }
+        set
+        {
+            showingRange = value;
+        }
+    }
+
+    public int Damage
+    {
+        get
+        {
+            return damage;
+        }
+        set
+        {
+            damage = value;
+        }
+    }
 }
