@@ -3,18 +3,29 @@ using UnityEngine.UI;
 using System.Collections;
 
 [ExecuteInEditMode]
-public class PlayerCharacter : TileObject {
+public class PlayerCharacter : TileObject
+{
 
     //public bool mouseOver;
-    
 
-	// Use this for initialization
-	void Start () {
+    public Image healthBar;
+
+    //Player property
+    public int AtkRange = 1;
+    public int AtkPower = 3;
+    public int AoeRange = 8;
+
+    // Use this for initialization
+    void Start ()
+    {
         InitializeTileObject();
+        healthBar = transform.FindChild("PlayerCanvas").FindChild("Health").FindChild("HealthGreen").GetComponent<Image>();
+
     }
 	
 	// Update is called once per frame
 	void Update () {
+     
         if (turnManager.SelectedUnit == this)
         {
             gameObject.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.blue);
@@ -49,7 +60,7 @@ public class PlayerCharacter : TileObject {
 
                 if (Input.GetKeyDown(KeyCode.A) && turnManager.SelectedUnit == this)
                 {
-                    DisplayAttacks(8, 1, 3);
+                    DisplayAttacks(AtkRange, AtkPower, AoeRange);
                 }
 
                 if (Input.GetKeyDown(KeyCode.M) && turnManager.SelectedUnit == this)
@@ -63,6 +74,7 @@ public class PlayerCharacter : TileObject {
                 }
             }
         }
+        HealthManager();
 
     }
 
@@ -141,6 +153,9 @@ public class PlayerCharacter : TileObject {
 
     }
 
-    
+    private void HealthManager()
+    {
+        healthBar.fillAmount = (float)hP / (float)maxHP;
+    }
 
 }

@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 [ExecuteInEditMode]
 public class ComputerUnit : TileObject {
+
+    public Image healthBar;
+
     public enum AIState
     {
         Pursuing,
@@ -22,10 +26,12 @@ public class ComputerUnit : TileObject {
 	// Use this for initialization
 	void Start () {
         InitializeTileObject();
+        healthBar = transform.FindChild("AICanvas").FindChild("Health").FindChild("HealthGreen").GetComponent<Image>();
     }
 	
 	// Update is called once per frame
 	void Update () {
+           HealthManager();
         if (!isMoving)
         {
             NotMovingUpdate();
@@ -35,7 +41,7 @@ public class ComputerUnit : TileObject {
                 StateManager();
             }
         }
-
+        HealthManager();
     }
 
     void StateManager()
@@ -108,4 +114,10 @@ public class ComputerUnit : TileObject {
             isTurn = value;
         }
     }
+
+    private void HealthManager()
+    {
+        healthBar.fillAmount = (float)hP / (float)maxHP;
+    }
+
 }

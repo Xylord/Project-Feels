@@ -20,4 +20,5 @@ public class CameraFacingBillboard : MonoBehaviour
             mainCamera.transform.rotation * Vector3.up);
 
     }
+    
 }

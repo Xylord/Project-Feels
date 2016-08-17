@@ -16,7 +16,9 @@ public class TileObject : BasicTileObject
     public int movementPoints, actionPoints;
     public Image descriptionBox;
 
-    
+
+
+
     public int hP, sanity;
 
     [HideInInspector]
@@ -25,9 +27,12 @@ public class TileObject : BasicTileObject
     [HideInInspector]
     public int parsedMoves, routesFound;
 
-	// Use this for initialization
-	void Start () {
+    
+    // Use this for initialization
+    void Start ()
+    {
         InitializeTileObject();
+
     }
 
     public void InitializeTileObject()
@@ -70,7 +75,7 @@ public class TileObject : BasicTileObject
         sanity = maxSanity;
 
         //UI
-        descriptionBox = gameObject.transform.FindChild("PlayerCanvas").FindChild("MouseOverText").GetComponent<Image>();
+      //  descriptionBox = gameObject.transform.FindChild("PlayerCanvas").FindChild("MouseOverText").GetComponent<Image>();
     }
 	
 	// Update is called once per frame
@@ -287,9 +292,9 @@ public class TileObject : BasicTileObject
     {
         hP -= damage;
 
-        if(hP <= 0)
+        if (hP <= 0)
         {
-            Destroy(this);
+            Destroy(gameObject);
         }
     }
 
@@ -791,4 +796,11 @@ public class TileObject : BasicTileObject
         }
         nextTile = grid.Grid(X, Y + 1);
     }*/
+
+    public void OnDestroy()
+    {
+        presentTile.GetComponent<BasicTile>().isOccupied = false;
+        presentTile.GetComponent<BasicTile>().CharacterStepping = null;
+    }
+
 }
