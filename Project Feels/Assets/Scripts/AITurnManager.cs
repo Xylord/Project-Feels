@@ -10,13 +10,16 @@ public class AITurnManager : MonoBehaviour {
     private PlayerCharacter[] spawnedPCs;
     public bool playerTurn;
     private PlayerCharacter selectedUnit;
+    private ComputerUnit actingAI;
     public GameObject mouseOverObject;
+    private int turnCount;
 
     // Use this for initialization
     void Start () {
         grid = GameObject.Find("Grid").GetComponent<LevelGrid>();
         spawnedAIs = FindObjectsOfType(typeof(ComputerUnit)) as ComputerUnit[];
         spawnedPCs = FindObjectsOfType(typeof(PlayerCharacter)) as PlayerCharacter[];
+        turnCount = 0;
     }
 	
 	// Update is called once per frame
@@ -39,10 +42,14 @@ public class AITurnManager : MonoBehaviour {
         grid.turnManager.PlayerTurn = true;
         spawnedPCs = FindObjectsOfType(typeof(PlayerCharacter)) as PlayerCharacter[];
 
+        actingAI = null;
+
         for(int i = 0; i < spawnedPCs.Length; i++)
         {
             spawnedPCs[i].NewTurn();
         }
+
+        turnCount++;
     }
 
     /*public void StartCPUTurn()
@@ -55,9 +62,9 @@ public class AITurnManager : MonoBehaviour {
         spawnedAIs = (FindObjectsOfType(typeof(ComputerUnit)) as ComputerUnit[]);
         for (int i = 0; i < spawnedAIs.Length; i++)
         {
-            spawnedAIs[i].IsTurn = true;
+            actingAI = spawnedAIs[i];
             (FindObjectOfType(typeof(AnimateCamera)) as AnimateCamera).TargetObject = spawnedAIs[i].gameObject;
-            while (spawnedAIs[i].IsTurn)
+            while (actingAI == spawnedAIs[i])
             {
                 yield return null;
             }
@@ -89,4 +96,29 @@ public class AITurnManager : MonoBehaviour {
             selectedUnit = value;
         }
     }
+
+    public ComputerUnit ActingAI
+    {
+        get
+        {
+            return actingAI;
+        }
+        set
+        {
+            actingAI = value;
+        }
+    }
+
+    public int TurnCount
+    {
+        get
+        {
+            return turnCount;
+        }
+        set
+        {
+            turnCount = value;
+        }
+    }
 }
+

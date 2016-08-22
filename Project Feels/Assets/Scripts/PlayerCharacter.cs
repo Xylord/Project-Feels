@@ -8,7 +8,7 @@ public class PlayerCharacter : TileObject
 
     //public bool mouseOver;
 
-    public Image healthBar;
+    //public Image healthBar;
 
     //Player property
     public int AtkRange = 1;
@@ -19,7 +19,6 @@ public class PlayerCharacter : TileObject
     void Start ()
     {
         InitializeTileObject();
-        healthBar = transform.FindChild("PlayerCanvas").FindChild("Health").FindChild("HealthGreen").GetComponent<Image>();
 
     }
 	
@@ -29,19 +28,16 @@ public class PlayerCharacter : TileObject
         if (turnManager.SelectedUnit == this)
         {
             gameObject.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.blue);
-            descriptionBox.enabled = true;
         }
 
         else if (turnManager.mouseOverObject == gameObject)
         {
             gameObject.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.red);
-            descriptionBox.enabled = true;
         }
 
         else
         {
             gameObject.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.white);
-            descriptionBox.enabled = false;
         }
 
 
@@ -53,7 +49,7 @@ public class PlayerCharacter : TileObject
             {
                 Selecting();
 
-                if (Input.GetKeyDown(KeyCode.B))
+                if (Input.GetKeyDown(KeyCode.B) && turnManager.SelectedUnit == this)
                 {
                     turnManager.PlayerTurnEnd();
                 }
@@ -74,7 +70,7 @@ public class PlayerCharacter : TileObject
                 }
             }
         }
-        HealthManager();
+        RotationUpdate();
 
     }
 
@@ -152,10 +148,4 @@ public class PlayerCharacter : TileObject
         //StartCoroutine(NewFindMovesCorout(xPos, yPos, startRoute, routesFound, maxMovementPoints));
 
     }
-
-    private void HealthManager()
-    {
-        healthBar.fillAmount = (float)hP / (float)maxHP;
-    }
-
 }

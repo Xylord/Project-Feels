@@ -14,10 +14,8 @@ public class TileObject : BasicTileObject
     public AITurnManager turnManager;
     public int team;
     public int movementPoints, actionPoints;
-    public Image descriptionBox;
-
-
-
+    //public Image descriptionBox;
+    public Animator animatedMesh;
 
     public int hP, sanity;
 
@@ -46,8 +44,7 @@ public class TileObject : BasicTileObject
             GameObject tile = grid.spawnTiles[i].gameObject;
             for (int j = 0; j < tile.GetComponent<BasicTile>().spawnTags.Length; j++)
             {
-
-                if (gameObject.CompareTag(tile.GetComponent<BasicTile>().spawnTags[j]) && !tile.GetComponent<BasicTile>().IsOccupied)
+                if (gameObject.CompareTag(tile.GetComponent<BasicTile>().spawnTags[j]) && !tile.GetComponent<BasicTile>().IsOccupied && tile.GetComponent<BasicTile>().IsSpawn)
                 {
                     possibleSpawns.Add(tile);
                 }
@@ -68,7 +65,9 @@ public class TileObject : BasicTileObject
         }
 
         turnManager = GameObject.Find("AITurnManager").GetComponent<AITurnManager>();
+        animatedMesh = transform.GetChild(1).gameObject.GetComponent<Animator>();
         isMoving = false;
+        orientation = BasicTile.Orientation.Forward;
         movementPoints = maxMovementPoints;
         actionPoints = maxActionPoints;
         hP = maxHP;
@@ -84,6 +83,7 @@ public class TileObject : BasicTileObject
         {
             NotMovingUpdate();
         }
+        RotationUpdate();
 		/*
         else
         {
@@ -170,6 +170,8 @@ public class TileObject : BasicTileObject
 
     public IEnumerator FollowRoute(MovementPlane.Movement[] route)
     {
+        animatedMesh.Play("Armature|Walk_blocking");
+
         for(int i = 0; i < route.Length; i++)
         {
             float moveProgress = 0f;
@@ -181,11 +183,12 @@ public class TileObject : BasicTileObject
 
             while(moveProgress <= 1f)
             {
+                orientation = route[i].orientation;
                 transform.localPosition = CalculateMovement(moveProgress);
                 moveProgress += Time.deltaTime * speed;
                 yield return null;
             }
-
+            
             presentTile.GetComponent<BasicTile>().IsOccupied = false;
             presentTile.GetComponent<BasicTile>().CharacterStepping = null;
             presentTile = nextTile;
@@ -197,6 +200,9 @@ public class TileObject : BasicTileObject
         isMoving = false;
         movementPoints -= MovementPlane.RouteMoveCost(route);
         FinishedMoving();
+
+        animatedMesh.Play("Armature|WAIT01.001");
+
         yield break;
     }
 
@@ -309,29 +315,22 @@ public class TileObject : BasicTileObject
         int[] straightMoves = new int[8];
 
         MovementPlane.Movement[] directions = new MovementPlane.Movement[8];
-        directions[0].xMovement = 1;
-        directions[0].yMovement = 0;
 
-        directions[4].xMovement = 1;
-        directions[4].yMovement = 1;
+        directions[0] = new MovementPlane.Movement(1, 0);
 
-        directions[1].xMovement = 0;
-        directions[1].yMovement = 1;
+        directions[4] = new MovementPlane.Movement(1, 1);
 
-        directions[5].xMovement = -1;
-        directions[5].yMovement = 1;
+        directions[1] = new MovementPlane.Movement(0, 1);
 
-        directions[2].xMovement = -1;
-        directions[2].yMovement = 0;
+        directions[5] = new MovementPlane.Movement(-1, 1);
 
-        directions[6].xMovement = -1;
-        directions[6].yMovement = -1;
+        directions[2] = new MovementPlane.Movement(-1, 0);
 
-        directions[3].xMovement = 0;
-        directions[3].yMovement = -1;
+        directions[6] = new MovementPlane.Movement(-1, -1);
 
-        directions[7].xMovement = 1;
-        directions[7].yMovement = -1;
+        directions[3] = new MovementPlane.Movement(0, -1);
+
+        directions[7] = new MovementPlane.Movement(1, -1);
 
         for (int i = 0; i < straightMoves.Length; i++)
         {

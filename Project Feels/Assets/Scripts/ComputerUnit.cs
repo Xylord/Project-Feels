@@ -5,7 +5,7 @@ using System.Collections;
 [ExecuteInEditMode]
 public class ComputerUnit : TileObject {
 
-    public Image healthBar;
+    //public Image healthBar;
 
     public enum AIState
     {
@@ -17,31 +17,28 @@ public class ComputerUnit : TileObject {
 
     private AIState aiState;
 
-    
-    public bool isTurn;
-
     public int detectionRange;
     public TileObject targetObject;
 
 	// Use this for initialization
 	void Start () {
         InitializeTileObject();
-        healthBar = transform.FindChild("AICanvas").FindChild("Health").FindChild("HealthGreen").GetComponent<Image>();
+        
     }
 	
 	// Update is called once per frame
 	void Update () {
-           HealthManager();
         if (!isMoving)
         {
             NotMovingUpdate();
 
-            if (isTurn)
+            if (turnManager.ActingAI == this)
             {
                 StateManager();
             }
         }
-        HealthManager();
+
+        RotationUpdate();
     }
 
     void StateManager()
@@ -100,24 +97,7 @@ public class ComputerUnit : TileObject {
 
     public override void FinishedMoving()
     {
-        isTurn = false;
-    }
-
-    public bool IsTurn
-    {
-        get
-        {
-            return isTurn;
-        }
-        set
-        {
-            isTurn = value;
-        }
-    }
-
-    private void HealthManager()
-    {
-        healthBar.fillAmount = (float)hP / (float)maxHP;
+        turnManager.ActingAI = null;
     }
 
 }

@@ -11,11 +11,47 @@ public class MovementPlane : MonoBehaviour
     public struct Movement
     {
         public int xMovement, yMovement;
+        public BasicTile.Orientation orientation;
 
         public Movement(int xMove, int yMove)
         {
             xMovement = xMove;
             yMovement = yMove;
+
+            orientation = BasicTile.Orientation.Directionless;
+            if (xMove == 1)
+            {
+                if (yMove == 1)
+                    orientation = BasicTile.Orientation.ForwardRight;
+                
+                else if (yMove == 0)
+                    orientation = BasicTile.Orientation.Forward;
+                
+                else if (yMove == -1)
+                    orientation = BasicTile.Orientation.ForwardLeft;
+            }
+            else if (xMove == 0)
+            {
+                if (yMove == 1)
+                    orientation = BasicTile.Orientation.Right;
+                
+                else if (yMove == 0)
+                    orientation = BasicTile.Orientation.Directionless;
+                
+                else if (yMove == -1)
+                    orientation = BasicTile.Orientation.Left;
+            }
+            else if (xMove == -1)
+            {
+                if (yMove == 1)
+                    orientation = BasicTile.Orientation.BackwardRight;
+                
+                else if (yMove == 0)
+                    orientation = BasicTile.Orientation.Backward;
+                
+                else if (yMove == -1)
+                    orientation = BasicTile.Orientation.BackwardLeft;
+            }
         }
     }
 
@@ -54,8 +90,6 @@ public class MovementPlane : MonoBehaviour
 
     void OnDestroy()
     {
-
-        print("Destroying indicators");
         for (int i = 0; i < areaOfEffectObjects.Length; i++)
         {
             if (areaOfEffectObjects[i] != null)
