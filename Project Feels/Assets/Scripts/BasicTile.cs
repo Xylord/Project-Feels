@@ -238,7 +238,7 @@ public class BasicTile : MonoBehaviour {
             }
             else if (unitsBlock)
             {
-                print("pretty pls " + moveDirection);
+               // print("pretty pls " + moveDirection);
                 if (moveDirection == Orientation.ForwardRight && grid.Grid(xPosition, yPosition - 1).GetComponent<BasicTile>().IsOccupied && grid.Grid(xPosition - 1, yPosition).GetComponent<BasicTile>().IsOccupied)
                 {
                     return false;
@@ -280,7 +280,7 @@ public class BasicTile : MonoBehaviour {
 
             if (moveDirection != InvertOrientation(originTile.orientation) && moveDirection != originTile.orientation && originTile.orientation == orientation)
             {
-                print("Move thing");
+               // print("Move thing");
                 if (type == TileKind.Stair
                     && sameHeight)
                 {
@@ -339,7 +339,7 @@ public class BasicTile : MonoBehaviour {
 
             else if (moveDirection != InvertOrientation(originTile.orientation) && moveDirection != originTile.orientation)
             {
-                print("Move thing");
+              //  print("Move thing");
                 if (type == TileKind.Stair
                     && sameHeight)
                 {
