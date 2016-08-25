@@ -10,6 +10,7 @@ public class TileObject : BasicTileObject
     public float speed;
     public GameObject[] possibleMoves;
     public List<TileObject> objectsWithinRange = new List<TileObject>();
+    public List<int> objectsInRangeIndex = new List<int>();
     public int maxMovementPoints, maxActionPoints, maxHP, maxSanity;
     public AITurnManager turnManager;
     public int team;
@@ -246,9 +247,11 @@ public class TileObject : BasicTileObject
         return Vector3.Lerp(oldPosition, newPosition, moveProgress) + new Vector3(0f, offsetFromTile, 0f);
     }
 
-    public void DisplayAttacks(int attackRange, int damage, int aOERange)
+    public void DisplayAttacks(int attackRange, int damage, int aOERange, int knockback)
     {
         ClearMoves();
+        objectsWithinRange.Clear();
+        objectsInRangeIndex.Clear();
 
         int xPos = presentTile.GetComponent<BasicTile>().XPosition,
             yPos = presentTile.GetComponent<BasicTile>().YPosition,
@@ -273,7 +276,7 @@ public class TileObject : BasicTileObject
                     if (grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>().IsOccupied)
                     {
                         objectsWithinRange.Add(grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>().CharacterStepping);
-                        print("Added target");
+                        objectsInRangeIndex.Add(attacksFound);
                         possibleMoves[attacksFound] = Instantiate(targetPlane);
                     }
                     else
@@ -281,6 +284,43 @@ public class TileObject : BasicTileObject
                         possibleMoves[attacksFound] = Instantiate(attackPlane);
                     }
 
+                    int deltaX, deltaY;
+                    deltaX = i;
+                    deltaY = j;
+
+                    BasicTile.Orientation knockbackDirection = BasicTile.Orientation.Directionless;
+
+                    if (deltaX == 0)
+                    {
+                        if (deltaY < 0)
+                            knockbackDirection = BasicTile.Orientation.Right;
+                        else if (deltaY > 0)
+                            knockbackDirection = BasicTile.Orientation.Left;
+                    }
+                    else if (deltaY == 0)
+                    {
+                        if (deltaX > 0)
+                            knockbackDirection = BasicTile.Orientation.Forward;
+                        else if (deltaX < 0)
+                            knockbackDirection = BasicTile.Orientation.Backward;
+                    }
+                    else if (deltaX > 0)
+                    {
+                        if (deltaY < 0)
+                            knockbackDirection = BasicTile.Orientation.ForwardRight;
+                        else if (deltaY > 0)
+                            knockbackDirection = BasicTile.Orientation.ForwardLeft;
+                    }
+                    else if (deltaX < 0)
+                    {
+                        if (deltaY < 0)
+                            knockbackDirection = BasicTile.Orientation.BackwardRight;
+                        else if (deltaY > 0)
+                            knockbackDirection = BasicTile.Orientation.BackwardLeft;
+                    }
+
+                    possibleMoves[attacksFound].GetComponent<MovementPlane>().knockbackDirection = knockbackDirection;
+                    possibleMoves[attacksFound].GetComponent<MovementPlane>().knockback = knockback;
                     possibleMoves[attacksFound].GetComponent<MovementPlane>().aOERange = aOERange;
                     possibleMoves[attacksFound].GetComponent<MovementPlane>().Damage = damage;
                     possibleMoves[attacksFound].GetComponent<MovementPlane>().Target = true;
@@ -302,6 +342,70 @@ public class TileObject : BasicTileObject
         {
             Destroy(gameObject);
         }
+    }
+
+    public void KnockbackFunction(int knockBackTiles, BasicTile.Orientation direction)
+    {
+        isMoving = true;
+        StartCoroutine(Knockback(knockBackTiles, direction));
+    }
+
+    public IEnumerator Knockback(int knockBackTiles, BasicTile.Orientation direction)
+    {
+        MovementPlane.Movement move = new MovementPlane.Movement(direction);
+        int diagonalFactor;
+
+        if (direction == BasicTile.Orientation.Forward || direction == BasicTile.Orientation.Right ||
+            direction == BasicTile.Orientation.Backward || direction == BasicTile.Orientation.Left)
+            diagonalFactor = 2;
+        
+        else
+            diagonalFactor = 3;
+
+        //print("knocking " + this + " " + knockBackTiles + " " + diagonalFactor + " " + move.orientation);
+
+        for (int i = 0; i < knockBackTiles / diagonalFactor; i++)
+        {
+            float moveProgress = 0f;
+
+            int X = presentTile.GetComponent<BasicTile>().XPosition,
+                Y = presentTile.GetComponent<BasicTile>().YPosition;
+
+            print(move.xMovement + " " + move.yMovement + " " + direction);
+            nextTile = grid.Grid(X + move.xMovement, Y + move.yMovement);
+
+            if (!nextTile.GetComponent<BasicTile>().Accessible(presentTile.GetComponent<BasicTile>(), true, team))
+            {
+                Damage(knockBackTiles - i * diagonalFactor);
+                break;
+            }
+
+            while (moveProgress <= 1f)
+            {
+                print("knocking " + presentTile + " " + nextTile + " " + moveProgress);
+                orientation = move.orientation;
+                transform.localPosition = CalculateMovement(moveProgress);
+                moveProgress += Time.deltaTime * speed;
+                yield return null;
+            }
+
+            print("Ending this NOW");
+
+            presentTile.GetComponent<BasicTile>().IsOccupied = false;
+            presentTile.GetComponent<BasicTile>().CharacterStepping = null;
+            presentTile = nextTile;
+            presentTile.GetComponent<BasicTile>().IsOccupied = true;
+            presentTile.GetComponent<BasicTile>().CharacterStepping = this;
+            nextTile = null;
+            moveProgress = 0f;
+        }
+
+        isMoving = false;
+        FinishedMoving();
+
+        animatedMesh.Play("Armature|WAIT01.001");
+
+        yield break;
     }
 
     public void FindMoves(int xPos, int yPos, MovementPlane.Movement[] route, int movesFound, int movementPointsLeft, int maxMoves, bool unitsBlock)

@@ -69,7 +69,7 @@ public class ComputerUnit : TileObject {
         {
             for (int i = 0; i < possibleMoves.Length; i++)
             {
-                if (targetObject.WithinZMovesFromThis(3, possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>(), true))// && targetObject.presentTile.GetComponent<BasicTile>().Accessible(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>(), true))
+                if (targetObject.WithinZMovesFromThis(3, possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>(), false))// && targetObject.presentTile.GetComponent<BasicTile>().Accessible(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>(), true))
                 {
                     isMoving = true;
                     /*if (possibleMoves[i].GetComponent<MovementPlane>().movementCost <= maxMovementPoints)
@@ -81,22 +81,34 @@ public class ComputerUnit : TileObject {
                     ClearMoves();
                     break;
                 }
-
-
-                //print(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping.name);
-                /*if(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping != null && possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().CharacterStepping.team != team)
-                {
-
-                }*/
             }
         }
-        //StartCoroutine(NewFindMovesCorout(xPos, yPos, startRoute, routesFound, maxMovementPoints));
+    }
 
+    public void AttackTargets()
+    {
+        DisplayAttacks(3, 2, 1, 2);
 
+        float weaknessLevel = 2;
+        int weakestTarget = -1;
+
+        for(int i = 0; i < objectsWithinRange.Count; i++)
+        {
+            if ((float)objectsWithinRange[i].hP / (float)objectsWithinRange[i].maxHP < weaknessLevel)
+            {
+                weaknessLevel = (float)objectsWithinRange[i].hP / (float)objectsWithinRange[i].maxHP;
+                weakestTarget = i;
+            }
+        }
+
+        if (weakestTarget != -1)
+            possibleMoves[objectsInRangeIndex[weakestTarget]].GetComponent<MovementPlane>().ExecuteAttack();
     }
 
     public override void FinishedMoving()
     {
+        AttackTargets();
+        ClearMoves();
         turnManager.ActingAI = null;
     }
 

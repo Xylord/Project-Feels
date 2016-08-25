@@ -6,8 +6,6 @@ using System.Collections.Generic;
 [ExecuteInEditMode]
 public class MovementPlane : MonoBehaviour
 {
-   
-
     public struct Movement
     {
         public int xMovement, yMovement;
@@ -22,35 +20,80 @@ public class MovementPlane : MonoBehaviour
             if (xMove == 1)
             {
                 if (yMove == 1)
-                    orientation = BasicTile.Orientation.ForwardRight;
+                    orientation = BasicTile.Orientation.ForwardLeft;
                 
                 else if (yMove == 0)
                     orientation = BasicTile.Orientation.Forward;
                 
                 else if (yMove == -1)
-                    orientation = BasicTile.Orientation.ForwardLeft;
+                    orientation = BasicTile.Orientation.ForwardRight;
             }
             else if (xMove == 0)
             {
                 if (yMove == 1)
-                    orientation = BasicTile.Orientation.Right;
+                    orientation = BasicTile.Orientation.Left;
                 
                 else if (yMove == 0)
                     orientation = BasicTile.Orientation.Directionless;
                 
                 else if (yMove == -1)
-                    orientation = BasicTile.Orientation.Left;
+                    orientation = BasicTile.Orientation.Right;
             }
             else if (xMove == -1)
             {
                 if (yMove == 1)
-                    orientation = BasicTile.Orientation.BackwardRight;
+                    orientation = BasicTile.Orientation.BackwardLeft;
                 
                 else if (yMove == 0)
                     orientation = BasicTile.Orientation.Backward;
                 
                 else if (yMove == -1)
-                    orientation = BasicTile.Orientation.BackwardLeft;
+                    orientation = BasicTile.Orientation.BackwardRight;
+            }
+        }
+
+        public Movement(BasicTile.Orientation direction)
+        {
+            orientation = direction;
+
+            xMovement = 0;
+            yMovement = 0;
+
+            switch (direction)
+            {
+                case BasicTile.Orientation.Forward:
+                    xMovement = 1;
+                    yMovement = 0;
+                    break;
+                case BasicTile.Orientation.ForwardRight:
+                    xMovement = 1;
+                    yMovement = -1;
+                    break;
+                case BasicTile.Orientation.Right:
+                    xMovement = 0;
+                    yMovement = -1;
+                    break;
+                case BasicTile.Orientation.BackwardRight:
+                    xMovement = -1;
+                    yMovement = -1;
+                    break;
+                case BasicTile.Orientation.Backward:
+                    xMovement = -1;
+                    yMovement = 0;
+                    break;
+                case BasicTile.Orientation.BackwardLeft:
+                    xMovement = -1;
+                    yMovement = 1;
+                    break;
+                case BasicTile.Orientation.Left:
+                    xMovement = 0;
+                    yMovement = 1;
+                    break;
+                case BasicTile.Orientation.ForwardLeft:
+                    xMovement = 1;
+                    yMovement = 1;
+                    break;
+
             }
         }
     }
@@ -69,7 +112,8 @@ public class MovementPlane : MonoBehaviour
     public LineRenderer routeLine;
     public GameObject[] areaOfEffectObjects;
     private bool target, showingRange;
-    public int damage, aOERange;
+    public int damage, aOERange, knockback;
+    public BasicTile.Orientation knockbackDirection;
 
     //private TextMesh coordinates;
 
@@ -83,8 +127,13 @@ public class MovementPlane : MonoBehaviour
     {
         for(int i = 0; i < objectsInRange.Count; i++)
         {
-            print("Object in range : " + objectsInRange[i]);
             objectsInRange[i].GetComponent<TileObject>().Damage(damage);
+            if (knockback > 0)
+            {
+                //print("knockback! " + knockback + " " + knockbackDirection);
+                objectsInRange[i].GetComponent<TileObject>().IsMoving = true;
+                objectsInRange[i].GetComponent<TileObject>().KnockbackFunction(knockback, knockbackDirection);
+            }
         }
     }
 

@@ -49,6 +49,15 @@ public class PlayerCharacter : TileObject
             {
                 Selecting();
 
+                /*if (Input.GetKeyDown(KeyCode.K) && turnManager.SelectedUnit == this)
+                {
+                    for(int i = 0; i < 300; i++)
+                    {
+                        Debug.Log("Dank memes");
+                    }
+                    
+                }*/
+
                 if (Input.GetKeyDown(KeyCode.B) && turnManager.SelectedUnit == this)
                 {
                     turnManager.PlayerTurnEnd();
@@ -56,7 +65,7 @@ public class PlayerCharacter : TileObject
 
                 if (Input.GetKeyDown(KeyCode.A) && turnManager.SelectedUnit == this)
                 {
-                    DisplayAttacks(AtkRange, AtkPower, AoeRange);
+                    DisplayAttacks(AtkRange, AtkPower, AoeRange, 9);
                 }
 
                 if (Input.GetKeyDown(KeyCode.M) && turnManager.SelectedUnit == this)
@@ -93,7 +102,6 @@ public class PlayerCharacter : TileObject
                     MovementPlane movePlane = hitInfo.transform.gameObject.GetComponent<MovementPlane>();
                     if (movePlane.Target)
                     {
-                        print("Doing attack");
                         movePlane.ExecuteAttack();
                     }
                     else

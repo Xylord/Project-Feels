@@ -238,23 +238,22 @@ public class BasicTile : MonoBehaviour {
             }
             else if (unitsBlock)
             {
-               // print("pretty pls " + moveDirection);
-                if (moveDirection == Orientation.ForwardRight && grid.Grid(xPosition, yPosition - 1).GetComponent<BasicTile>().IsOccupied && grid.Grid(xPosition - 1, yPosition).GetComponent<BasicTile>().IsOccupied)
+                if (moveDirection == Orientation.ForwardRight && grid.Grid(xPosition, yPosition + 1).GetComponent<BasicTile>().IsOccupied && grid.Grid(xPosition - 1, yPosition).GetComponent<BasicTile>().IsOccupied)
                 {
                     return false;
                 }
 
-                else if (moveDirection == Orientation.BackwardRight && grid.Grid(xPosition, yPosition - 1).GetComponent<BasicTile>().IsOccupied && grid.Grid(xPosition + 1, yPosition).GetComponent<BasicTile>().IsOccupied)
+                else if (moveDirection == Orientation.BackwardRight && grid.Grid(xPosition, yPosition + 1).GetComponent<BasicTile>().IsOccupied && grid.Grid(xPosition + 1, yPosition).GetComponent<BasicTile>().IsOccupied)
                 {
                     return false;
                 }
 
-                else if (moveDirection == Orientation.BackwardLeft && grid.Grid(xPosition, yPosition + 1).GetComponent<BasicTile>().IsOccupied && grid.Grid(xPosition + 1, yPosition).GetComponent<BasicTile>().IsOccupied)
+                else if (moveDirection == Orientation.BackwardLeft && grid.Grid(xPosition, yPosition - 1).GetComponent<BasicTile>().IsOccupied && grid.Grid(xPosition + 1, yPosition).GetComponent<BasicTile>().IsOccupied)
                 {
                     return false;
                 }
 
-                else if (moveDirection == Orientation.ForwardLeft && grid.Grid(xPosition, yPosition + 1).GetComponent<BasicTile>().IsOccupied && grid.Grid(xPosition - 1, yPosition).GetComponent<BasicTile>().IsOccupied)
+                else if (moveDirection == Orientation.ForwardLeft && grid.Grid(xPosition, yPosition - 1).GetComponent<BasicTile>().IsOccupied && grid.Grid(xPosition - 1, yPosition).GetComponent<BasicTile>().IsOccupied)
                 {
                     return false;
                 }
@@ -280,7 +279,6 @@ public class BasicTile : MonoBehaviour {
 
             if (moveDirection != InvertOrientation(originTile.orientation) && moveDirection != originTile.orientation && originTile.orientation == orientation)
             {
-               // print("Move thing");
                 if (type == TileKind.Stair
                     && sameHeight)
                 {
@@ -339,7 +337,7 @@ public class BasicTile : MonoBehaviour {
 
             else if (moveDirection != InvertOrientation(originTile.orientation) && moveDirection != originTile.orientation)
             {
-              //  print("Move thing");
+                print("Move thing");
                 if (type == TileKind.Stair
                     && sameHeight)
                 {
@@ -355,6 +353,7 @@ public class BasicTile : MonoBehaviour {
 
         else if (originTile.type == TileKind.Flat && type == TileKind.Stair)
         {
+            //print(orientation + " " + moveDirection + " " + this);
             if (orientation == moveDirection && originTile.PresentHeight == presentHeight - 1)
             {
                 return true;

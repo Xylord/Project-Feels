@@ -31,25 +31,25 @@ public class BasicTileObject : MonoBehaviour {
                 newRotation = Quaternion.Euler(0f, 90f, 0f);
                 break;
             case BasicTile.Orientation.ForwardRight:
-                newRotation = Quaternion.Euler(0f, 45f, 0f);
+                newRotation = Quaternion.Euler(0f, 135f, 0f);
                 break;
             case BasicTile.Orientation.Right:
-                newRotation = Quaternion.Euler(0f, 0f, 0f);
+                newRotation = Quaternion.Euler(0f, 180f, 0f);
                 break;
             case BasicTile.Orientation.BackwardRight:
-                newRotation = Quaternion.Euler(0f, 315f, 0f);
+                newRotation = Quaternion.Euler(0f, 225f, 0f);
                 break;
             case BasicTile.Orientation.Backward:
                 newRotation = Quaternion.Euler(0f, 270f, 0f);
                 break;
             case BasicTile.Orientation.BackwardLeft:
-                newRotation = Quaternion.Euler(0f, 225f, 0f);
+                newRotation = Quaternion.Euler(0f, 315f, 0f);
                 break;
             case BasicTile.Orientation.Left:
-                newRotation = Quaternion.Euler(0f, 180f, 0f);
+                newRotation = Quaternion.Euler(0f, 0f, 0f);
                 break;
             case BasicTile.Orientation.ForwardLeft:
-                newRotation = Quaternion.Euler(0f, 135f, 0f);
+                newRotation = Quaternion.Euler(0f, 45f, 0f);
                 break;
         }
 

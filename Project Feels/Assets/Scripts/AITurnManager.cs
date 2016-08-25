@@ -120,6 +120,5 @@ public class AITurnManager : MonoBehaviour {
             turnCount = value;
         }
     }
-
 }
 
