@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [ExecuteInEditMode]
 public class BasicTile : MonoBehaviour {
@@ -10,7 +11,7 @@ public class BasicTile : MonoBehaviour {
         Forward,
         Backward,
         Right,
-        Left,
+        Left,  
         ForwardRight,
         ForwardLeft,
         BackwardRight,
@@ -35,6 +36,7 @@ public class BasicTile : MonoBehaviour {
     public float randomHeightVariationRange;
     public bool isSpawn;
 	public string[] spawnTags;
+    public List<AuraManager.Effect> tileEffects = new List<AuraManager.Effect>();
 
     //private int nextHeight;
     private float continuousHeight, heightVariationProgress, randomHeightVariation;
@@ -42,7 +44,8 @@ public class BasicTile : MonoBehaviour {
     private bool isUnderwater;
     public TileObject characterStepping;
     public GameObject foundation, top;
-    
+
+    public int EFFECTSSTFET;
     
 
 	// Use this for initialization
@@ -64,6 +67,8 @@ public class BasicTile : MonoBehaviour {
         }*/
         
         transform.localPosition = new Vector3(xPosition * grid.GridScale, continuousHeight * grid.VerticalScale + randomHeightVariation, yPosition * grid.GridScale);
+
+        EFFECTSSTFET = tileEffects.Count;
     }
 
     public void ChangeHeight(int heightChange)

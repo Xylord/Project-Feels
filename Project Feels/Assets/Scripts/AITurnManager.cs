@@ -32,6 +32,10 @@ public class AITurnManager : MonoBehaviour {
     public void PlayerTurnEnd()
     {
         PlayerTurn = false;
+        for(int i = 0; i < spawnedPCs.Length; i++)
+        {
+            spawnedPCs[i].EndTurn();
+        }
         StartCoroutine(StartCPUTurn());
     }
 
@@ -41,6 +45,11 @@ public class AITurnManager : MonoBehaviour {
             (FindObjectOfType(typeof(PlayerCharacter)) as PlayerCharacter).gameObject;
         grid.turnManager.PlayerTurn = true;
         spawnedPCs = FindObjectsOfType(typeof(PlayerCharacter)) as PlayerCharacter[];
+
+        for (int i = 0; i < spawnedAIs.Length; i++)
+        {
+            spawnedAIs[i].EndTurn();
+        }
 
         actingAI = null;
 

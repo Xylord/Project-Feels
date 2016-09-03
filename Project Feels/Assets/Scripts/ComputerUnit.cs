@@ -39,6 +39,8 @@ public class ComputerUnit : TileObject {
         }
 
         RotationUpdate();
+
+        UpdateEffects();
     }
 
     void StateManager()

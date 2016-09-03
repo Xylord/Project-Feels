@@ -23,7 +23,8 @@ public class UnitMouseOver : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        movePoints.text = unit.movementPoints + " MovePoints";
+        int effectsNum = unit.activeEffects.Count;
+        movePoints.text = unit.movementPoints + " MovePoints " + effectsNum;
         BarManager();
     }
 

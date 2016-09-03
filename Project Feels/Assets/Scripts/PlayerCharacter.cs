@@ -81,6 +81,8 @@ public class PlayerCharacter : TileObject
         }
         RotationUpdate();
 
+        UpdateEffects();
+
     }
 
     void Selecting()

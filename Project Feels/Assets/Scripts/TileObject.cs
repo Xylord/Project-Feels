@@ -13,10 +13,15 @@ public class TileObject : BasicTileObject
     public List<int> objectsInRangeIndex = new List<int>();
     public int maxMovementPoints, maxActionPoints, maxHP, maxSanity;
     public AITurnManager turnManager;
+    public AuraManager aura;
     public int team;
     public int movementPoints, actionPoints;
     //public Image descriptionBox;
     public Animator animatedMesh;
+    public List<AuraManager.Effect> activeEffects = new List<AuraManager.Effect>();
+
+    //Bonus from auras
+    int attackBonus, defenseBonus, speedBonus, hPHealing, sanityHealing;
 
     public int hP, sanity;
 
@@ -65,6 +70,11 @@ public class TileObject : BasicTileObject
             nextTile = null;
         }
 
+        if (gameObject.GetComponent<AuraManager>() != null)
+        {
+            aura = gameObject.GetComponent<AuraManager>();
+        }
+
         turnManager = GameObject.Find("AITurnManager").GetComponent<AITurnManager>();
         animatedMesh = transform.GetChild(1).gameObject.GetComponent<Animator>();
         isMoving = false;
@@ -85,6 +95,7 @@ public class TileObject : BasicTileObject
             NotMovingUpdate();
         }
         RotationUpdate();
+        UpdateEffects();
 		/*
         else
         {
@@ -127,6 +138,23 @@ public class TileObject : BasicTileObject
             }
             return;
         }*/
+    }
+
+    public void UpdateEffects()
+    {
+        attackBonus = defenseBonus = speedBonus = hPHealing = sanityHealing = 0;
+
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            attackBonus += activeEffects[i].attackBonus;
+            defenseBonus += activeEffects[i].defenseBonus;
+            speedBonus += activeEffects[i].speedBonus;
+            hPHealing += activeEffects[i].hPHealing;
+            sanityHealing += activeEffects[i].sanityHealing;
+
+            if (activeEffects[i].duration <= 0)
+                activeEffects.RemoveAt(i);
+        }
     }
 
     static public MovementPlane.Movement[] TruncateRoute(MovementPlane.Movement[] truncatedRoute, int newMovementCost, bool removeLastMove)
@@ -215,7 +243,7 @@ public class TileObject : BasicTileObject
 
     public virtual void FinishedMoving()
     {
-
+        
     }
 
     Vector3 CalculateMovement(float moveProgress)
@@ -836,6 +864,17 @@ public class TileObject : BasicTileObject
         {
             isMoving = value;
         }
+    }
+
+    public void EndTurn()
+    {
+        for(int i = 0; i < activeEffects.Count; i++)
+        {
+            activeEffects[i].ReduceTimeLeft(1);
+            print(activeEffects[i].duration);
+        }
+
+        
     }
 
     
