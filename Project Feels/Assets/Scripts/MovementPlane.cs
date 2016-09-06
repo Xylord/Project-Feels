@@ -99,19 +99,21 @@ public class MovementPlane : MonoBehaviour
     }
 
     private LevelGrid grid;
-    public GameObject presentTile;
+    private GameObject presentTile;
     public GameObject AOEIndicator;
     private List<TileObject> objectsInRange = new List<TileObject>();
     public float offsetFromTile;
+    private TileObject parentUnit;
+    private bool planeEnabled;
     
     public AITurnManager turnManager;
 
-    public int movementCost;
-    public Movement[] route;
+    private int movementCost;
+    private Movement[] route;
     public string[] routesInString;
     public LineRenderer routeLine;
     public GameObject[] areaOfEffectObjects;
-    private bool target, showingRange;
+    private bool isAttack, showingRange;
     public int damage, aOERange, knockback;
     public BasicTile.Orientation knockbackDirection;
 
@@ -154,6 +156,20 @@ public class MovementPlane : MonoBehaviour
         grid = GameObject.Find("Grid").GetComponent<LevelGrid>();
         transform.parent = grid.gameObject.transform;
         turnManager = GameObject.Find("AITurnManager").GetComponent<AITurnManager>();
+    }
+
+    public void AssignMovementPlaneValues(GameObject presTile, bool isClickable, bool ifAttack, TileObject parent, Movement[] planeRoute = null, int moveCost = 0, int initDamage = 0, BasicTile.Orientation knockbackDir = BasicTile.Orientation.Directionless, int knockBackValue = 0, int aoeDist = 0)
+    {
+        presentTile = presTile;
+        route = planeRoute;
+        isAttack = ifAttack;
+        parentUnit = parent;
+        damage = initDamage;
+        movementCost = moveCost;
+        planeEnabled = isClickable;
+        knockbackDirection = knockbackDir;
+        knockback = knockBackValue;
+        aOERange = aoeDist;
         //routeLine = gameObject.AddComponent<LineRenderer>();
         /*GameObject text = new GameObject();
         coordinates = text.AddComponent<TextMesh>();
@@ -214,10 +230,10 @@ public class MovementPlane : MonoBehaviour
             HideAOE();
     }
 
-    public bool WithinZMovesFromThis(int z, BasicTile target, bool lineOfSight)
+    public bool WithinZMovesFromThis(int z, BasicTile targetTile, bool lineOfSight)
     {
-        int targetX = target.XPosition,
-            targetY = target.YPosition,
+        int targetX = targetTile.XPosition,
+            targetY = targetTile.YPosition,
             tileX = presentTile.GetComponent<BasicTile>().XPosition,
             tileY = presentTile.GetComponent<BasicTile>().YPosition,
             deltaX = Mathf.Abs(targetX - tileX),
@@ -255,15 +271,15 @@ public class MovementPlane : MonoBehaviour
             else
             {*/
             RaycastHit hitInfo = new RaycastHit();
-            Ray ray = new Ray(presentTile.transform.position + new Vector3(0f, 1f, 0f), target.gameObject.transform.position - presentTile.transform.position);
-            Debug.DrawRay(presentTile.transform.position + new Vector3(0f, 1f, 0f), target.gameObject.transform.position - presentTile.transform.position, Color.green, 60f);
+            Ray ray = new Ray(presentTile.transform.position + new Vector3(0f, 1f, 0f), targetTile.gameObject.transform.position - presentTile.transform.position);
+            Debug.DrawRay(presentTile.transform.position + new Vector3(0f, 1f, 0f), targetTile.gameObject.transform.position - presentTile.transform.position, Color.green, 60f);
 
             int mask = 1 << 8;
             bool hit = Physics.Raycast(ray, out hitInfo, 1000f, mask);
             if (hit)
             {
 
-                print(target + " " + hitInfo.collider.gameObject + " " + hit);
+                print(targetTile + " " + hitInfo.collider.gameObject + " " + hit);
                 isVisible = false;
             }
             //}
@@ -391,15 +407,15 @@ public class MovementPlane : MonoBehaviour
         print(routeString);
     }
 
-    public bool Target
+    public bool IsAttack
     {
         get
         {
-            return target;
+            return isAttack;
         }
         set
         {
-            target = value;
+            isAttack = value;
         }
     }
 
@@ -424,6 +440,42 @@ public class MovementPlane : MonoBehaviour
         set
         {
             damage = value;
+        }
+    }
+
+    public int MovementCost
+    {
+        get
+        {
+            return movementCost;
+        }
+        set
+        {
+            movementCost = value;
+        }
+    }
+
+    public GameObject PresentTile
+    {
+        get
+        {
+            return presentTile;
+        }
+        set
+        {
+            presentTile = value;
+        }
+    }
+
+    public Movement[] Route
+    {
+        get
+        {
+            return route;
+        }
+        set
+        {
+            route = value;
         }
     }
 }

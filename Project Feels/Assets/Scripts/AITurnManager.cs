@@ -9,7 +9,8 @@ public class AITurnManager : MonoBehaviour {
     private ComputerUnit[] spawnedAIs;
     private PlayerCharacter[] spawnedPCs;
     public bool playerTurn;
-    private PlayerCharacter selectedUnit;
+    public PlayerCharacter selectedUnit;
+    public ComputerUnit highlightedEnemy;
     private ComputerUnit actingAI;
     public GameObject mouseOverObject;
     private int turnCount;
@@ -25,9 +26,62 @@ public class AITurnManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
+        if (playerTurn)
+        {
+            Selecting();
+        }
         
 	
 	}
+
+    void Selecting()
+    {
+        RaycastHit hitInfo = new RaycastHit();
+        int mask = ~(1 << 8);
+        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity, mask);
+
+        if (hit)
+        {
+            if (Input.GetKey(KeyCode.Mouse0))
+            {
+                if (hitInfo.transform.gameObject.GetComponent<PlayerCharacter>())
+                {
+                    selectedUnit = hitInfo.transform.gameObject.GetComponent<PlayerCharacter>();
+                }
+                else if (hitInfo.transform.gameObject.GetComponent<ComputerUnit>())
+                {
+                    highlightedEnemy = hitInfo.transform.gameObject.GetComponent<ComputerUnit>();
+                }
+                /*else if (hitInfo.transform.gameObject.GetComponent<MovementPlane>())
+                {
+                    if (hitInfo.transform.gameObject.GetComponent<MovementPlane>().planeEnabled)
+                    {
+                        if (hitInfo.transform.gameObject.GetComponent<MovementPlane>().IsAttack)
+                            hitInfo.transform.gameObject.GetComponent<MovementPlane>().ExecuteAttack();
+                        else
+                        {
+                            hitInfo.transform.gameObject.GetComponent<MovementPlane>().parentUnit
+                        }
+                    }
+                }*/
+            }
+            else
+            {
+                if (hitInfo.transform.gameObject.GetComponent<TileObject>())
+                    mouseOverObject = hitInfo.transform.gameObject;
+                else if (hitInfo.transform.gameObject.GetComponent<MovementPlane>() != null)
+                {
+                    if (hitInfo.transform.gameObject.GetComponent<MovementPlane>().IsAttack)
+                    {
+
+                        mouseOverObject = hitInfo.transform.gameObject;
+                    }
+                }
+            }
+        }
+        else
+            mouseOverObject = null;
+    }
 
     public void PlayerTurnEnd()
     {

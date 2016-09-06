@@ -71,7 +71,7 @@ public class ComputerUnit : TileObject {
         {
             for (int i = 0; i < possibleMoves.Length; i++)
             {
-                if (targetObject.WithinZMovesFromThis(3, possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>(), false))// && targetObject.presentTile.GetComponent<BasicTile>().Accessible(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>(), true))
+                if (targetObject.WithinZMovesFromThis(3, possibleMoves[i].GetComponent<MovementPlane>().PresentTile.GetComponent<BasicTile>(), false))// && targetObject.presentTile.GetComponent<BasicTile>().Accessible(possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>(), true))
                 {
                     isMoving = true;
                     /*if (possibleMoves[i].GetComponent<MovementPlane>().movementCost <= maxMovementPoints)
@@ -79,7 +79,7 @@ public class ComputerUnit : TileObject {
                         StartCoroutine(FollowRoute(TileObject.TruncateRoute(possibleMoves[i].GetComponent<MovementPlane>().route, maxMovementPoints, true)));
                     }
                     else*/
-                    StartCoroutine(FollowRoute(TileObject.TruncateRoute(possibleMoves[i].GetComponent<MovementPlane>().route, maxMovementPoints, false)));
+                    StartCoroutine(FollowRoute(TileObject.TruncateRoute(possibleMoves[i].GetComponent<MovementPlane>().Route, maxMovementPoints, false)));
                     ClearMoves();
                     break;
                 }
@@ -105,6 +105,11 @@ public class ComputerUnit : TileObject {
 
         if (weakestTarget != -1)
             possibleMoves[objectsInRangeIndex[weakestTarget]].GetComponent<MovementPlane>().ExecuteAttack();
+    }
+
+    public void ShowMoveAttackRange()
+    {
+
     }
 
     public override void FinishedMoving()

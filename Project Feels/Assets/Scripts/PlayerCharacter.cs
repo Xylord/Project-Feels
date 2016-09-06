@@ -95,14 +95,10 @@ public class PlayerCharacter : TileObject
         {
             if (Input.GetKey(KeyCode.Mouse0))
             {
-                if (hitInfo.transform.gameObject.GetComponent<PlayerCharacter>() == this)
-                {
-                    turnManager.SelectedUnit = hitInfo.transform.gameObject.GetComponent<PlayerCharacter>();
-                }
-                else if (hitInfo.transform.gameObject.GetComponent<MovementPlane>() != null && turnManager.SelectedUnit == this)
+                if (hitInfo.transform.gameObject.GetComponent<MovementPlane>() != null && turnManager.SelectedUnit == this)
                 {
                     MovementPlane movePlane = hitInfo.transform.gameObject.GetComponent<MovementPlane>();
-                    if (movePlane.Target)
+                    if (movePlane.IsAttack)
                     {
                         movePlane.ExecuteAttack();
                     }
@@ -110,7 +106,7 @@ public class PlayerCharacter : TileObject
                     {
                         isMoving = true;
                         GameObject move = hitInfo.transform.gameObject;
-                        StartCoroutine(FollowRoute(TileObject.TruncateRoute(move.GetComponent<MovementPlane>().route, 32, false)));
+                        StartCoroutine(FollowRoute(TileObject.TruncateRoute(move.GetComponent<MovementPlane>().Route, 32, false)));
                     }
                     turnManager.SelectedUnit = null;
                     ClearMoves();
@@ -118,21 +114,15 @@ public class PlayerCharacter : TileObject
             }
             else
             {
-                if (hitInfo.transform.gameObject.GetComponent<PlayerCharacter>() == this)
-                    turnManager.mouseOverObject = gameObject;
-                else if (hitInfo.transform.gameObject.GetComponent<MovementPlane>() != null)
+                if (hitInfo.transform.gameObject.GetComponent<MovementPlane>() != null)
                 {
-                    if (hitInfo.transform.gameObject.GetComponent<MovementPlane>().Target)
+                    if (hitInfo.transform.gameObject.GetComponent<MovementPlane>().IsAttack)
                     {
-                        
                         turnManager.mouseOverObject = hitInfo.transform.gameObject;
                     }
                 }
             }
         }
-        else
-            if(turnManager.mouseOverObject == gameObject)
-                turnManager.mouseOverObject = null;
     }
 
     public override void FinishedMoving()
@@ -140,22 +130,5 @@ public class PlayerCharacter : TileObject
 
     }
 
-    void ShowMoves()
-    {
-        ClearMoves();
-
-        int xPos = presentTile.GetComponent<BasicTile>().XPosition,
-            yPos = presentTile.GetComponent<BasicTile>().YPosition;
-
-        MovementPlane.Movement[] startRoute = new MovementPlane.Movement[0];
-
-        possibleMoves = new GameObject[grid.xSize * grid.ySize];
-
-        routesFound = 0;
-        parsedMoves = 0;
-
-        FindMoves(xPos, yPos, startRoute, routesFound, movementPoints, movementPoints, true);
-        //StartCoroutine(NewFindMovesCorout(xPos, yPos, startRoute, routesFound, maxMovementPoints));
-
-    }
+    
 }

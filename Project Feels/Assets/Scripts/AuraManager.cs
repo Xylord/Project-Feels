@@ -114,6 +114,5 @@ public class AuraManager : MonoBehaviour
                 }
             }
         }
-        print(tilesFound);
     }
 }

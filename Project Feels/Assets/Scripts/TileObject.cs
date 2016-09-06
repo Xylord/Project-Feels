@@ -298,7 +298,7 @@ public class TileObject : BasicTileObject
                 if (yPos + j < 0 || yPos + j >= grid.ySize)
                     continue;
                 
-                
+
                 if (WithinZMovesFromThis(attackRange, grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>(), false) && !(i == 0 && j == 0))
                 {
                     if (grid.Grid(xPos + i, yPos + j).GetComponent<BasicTile>().IsOccupied)
@@ -347,19 +347,36 @@ public class TileObject : BasicTileObject
                             knockbackDirection = BasicTile.Orientation.BackwardLeft;
                     }
 
-                    possibleMoves[attacksFound].GetComponent<MovementPlane>().knockbackDirection = knockbackDirection;
-                    possibleMoves[attacksFound].GetComponent<MovementPlane>().knockback = knockback;
-                    possibleMoves[attacksFound].GetComponent<MovementPlane>().aOERange = aOERange;
-                    possibleMoves[attacksFound].GetComponent<MovementPlane>().Damage = damage;
-                    possibleMoves[attacksFound].GetComponent<MovementPlane>().Target = true;
-                    possibleMoves[attacksFound].GetComponent<MovementPlane>().presentTile = grid.Grid(xPos + i, yPos + j);
+
+                    possibleMoves[attacksFound].GetComponent<MovementPlane>().AssignMovementPlaneValues(grid.Grid(xPos + i, yPos + j), 
+                        true, true, this, 
+                        initDamage: damage, knockbackDir: knockbackDirection, knockBackValue: knockback, aoeDist: aOERange);
+                    
                     possibleMoves[attacksFound].name = "Move " + (xPos + i) + " " + (yPos + j);
-                    possibleMoves[attacksFound].GetComponent<MovementPlane>().route = null;
                     possibleMoves[attacksFound].GetComponent<MovementPlane>().FindAOE();
                     attacksFound++;
                 }
             }
         }
+    }
+
+    public void ShowMoves()
+    {
+        ClearMoves();
+
+        int xPos = presentTile.GetComponent<BasicTile>().XPosition,
+            yPos = presentTile.GetComponent<BasicTile>().YPosition;
+
+        MovementPlane.Movement[] startRoute = new MovementPlane.Movement[0];
+
+        possibleMoves = new GameObject[grid.xSize * grid.ySize];
+
+        routesFound = 0;
+        parsedMoves = 0;
+
+        FindMoves(xPos, yPos, startRoute, routesFound, movementPoints, movementPoints, true);
+        //StartCoroutine(NewFindMovesCorout(xPos, yPos, startRoute, routesFound, maxMovementPoints));
+
     }
 
     public void Damage(int damage)
@@ -481,8 +498,8 @@ public class TileObject : BasicTileObject
 
                     for (int i = 0; i < movesFound; i++)
                     {
-                        int X = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
-                            Y = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition,
+                        int X = possibleMoves[i].GetComponent<MovementPlane>().PresentTile.GetComponent<BasicTile>().XPosition,
+                            Y = possibleMoves[i].GetComponent<MovementPlane>().PresentTile.GetComponent<BasicTile>().YPosition,
                             newXPos = xPos, newYPos = yPos;
 
                         newXPos += straightMoves[j] * directions[j].xMovement;
@@ -540,10 +557,10 @@ public class TileObject : BasicTileObject
 
         if (possibleMoves[parsedMoves - 1] != null)
         {
-            int X = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
-                Y = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition,
-                movePointsLeft = maxMoves - possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().movementCost;
-            MovementPlane.Movement[] moveRoute = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().route;
+            int X = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().PresentTile.GetComponent<BasicTile>().XPosition,
+                Y = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().PresentTile.GetComponent<BasicTile>().YPosition,
+                movePointsLeft = maxMoves - possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().MovementCost;
+            MovementPlane.Movement[] moveRoute = possibleMoves[parsedMoves - 1].GetComponent<MovementPlane>().Route;
 
             FindMoves(X, Y, moveRoute, movesFound, movePointsLeft, maxMoves, unitsBlock);
         }
@@ -698,13 +715,13 @@ public class TileObject : BasicTileObject
         {
             for (int i = 0; i < movesFound; i++)
             {
-                int X = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().XPosition,
-                    Y = possibleMoves[i].GetComponent<MovementPlane>().presentTile.GetComponent<BasicTile>().YPosition;
+                int X = possibleMoves[i].GetComponent<MovementPlane>().PresentTile.GetComponent<BasicTile>().XPosition,
+                    Y = possibleMoves[i].GetComponent<MovementPlane>().PresentTile.GetComponent<BasicTile>().YPosition;
 
                 if (((xPos + move.xMovement == X && yPos == Y) ||
 					(xPos == X && yPos + move.yMovement == Y)) && 
 					DiagonalsCrossing(move,
-						possibleMoves[i].GetComponent<MovementPlane>().route[possibleMoves[i].GetComponent<MovementPlane>().route.Length - 1]))
+						possibleMoves[i].GetComponent<MovementPlane>().Route[possibleMoves[i].GetComponent<MovementPlane>().Route.Length - 1]))
                 {
 					crossingDiagonal = true;
                 }
@@ -732,20 +749,19 @@ public class TileObject : BasicTileObject
             if (moveCost <= maxMoves)
             {
                 possibleMoves[movesFound] = Instantiate(movementPlane);
-                possibleMoves[movesFound].GetComponent<MovementPlane>().presentTile = grid.Grid(xPos + move.xMovement, yPos + move.yMovement);
-                possibleMoves[movesFound].name = "Move " + (xPos + move.xMovement) + " " + (yPos + move.yMovement);
-                possibleMoves[movesFound].GetComponent<MovementPlane>().route = new MovementPlane.Movement[route.Length + 1];
-                possibleMoves[movesFound].GetComponent<MovementPlane>().Target = false;
+
+                MovementPlane.Movement[] newRoute = new MovementPlane.Movement[route.Length + 1];
 
                 for (int i = 0; i < route.Length; i++)
                 {
-                    possibleMoves[movesFound].GetComponent<MovementPlane>().route[i] = route[i];
+                    newRoute[i] = route[i];
                 }
 
-                possibleMoves[movesFound].GetComponent<MovementPlane>().route[route.Length] = move;
-                possibleMoves[movesFound].GetComponent<MovementPlane>().Damage = 0;
-                possibleMoves[movesFound].GetComponent<MovementPlane>().movementCost = moveCost;
-                possibleMoves[movesFound].name += " costs " + possibleMoves[movesFound].GetComponent<MovementPlane>().movementCost;
+                newRoute[route.Length] = move;
+
+                possibleMoves[movesFound].GetComponent<MovementPlane>().AssignMovementPlaneValues(grid.Grid(xPos + move.xMovement, yPos + move.yMovement), true, false, this, newRoute, moveCost);
+                possibleMoves[movesFound].name = "Move " + (xPos + move.xMovement) + " " + (yPos + move.yMovement);
+                possibleMoves[movesFound].name += " costs " + possibleMoves[movesFound].GetComponent<MovementPlane>().MovementCost;
 
                 foundMove = true;
             }
